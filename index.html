@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>FieldIQ</title>
+<title>GameIQ</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Cpath%20d%3D%22M%20100%2014%20L%20176%2040%20L%20176%20106%20Q%20176%20150%20100%20186%20Q%2024%20150%2024%20106%20L%2024%2040%20Z%22%20fill%3D%22none%22%20stroke%3D%22%2322c55e%22%20stroke-width%3D%225%22%20stroke-linejoin%3D%22round%22/%3E%3Cg%20transform%3D%22translate%2835.156%2C126.474%29%20scale%280.068%2C-0.068%29%22%3E%3Cpath%20d%3D%22M410%20-12Q327%20-12%20256.5%2015.5Q186%2043%20133.5%2093.0Q81%20143%2052.0%20210.0Q23%20277%2023%20356Q23%20436%2053.5%20503.0Q84%20570%20138.5%20619.5Q193%20669%20265.0%20696.5Q337%20724%20419%20724Q518%20724%20596.5%20690.0Q675%20656%20724%20598L589%20463Q552%20506%20512.0%20527.0Q472%20548%20416%20548Q363%20548%20320.0%20524.5Q277%20501%20251.5%20458.0Q226%20415%20226.0%20357.0Q226%20299%20249.5%20255.5Q273%20212%20315.0%20188.0Q357%20164%20413%20164Q467%20164%20504.0%20185.0Q541%20206%20561%20245Q563%20250%20565%20255L386%20260V420H781V390Q781%20262%20734.5%20172.0Q688%2082%20604.5%2035.0Q521%20-12%20410%20-12Z%22%20fill%3D%22%23e2e8f0%22/%3E%3C/g%3E%3Cg%20transform%3D%22translate%2887.352%2C126.474%29%20scale%280.068%2C-0.068%29%22%3E%3Cpath%20d%3D%22M59%200V712H259V0Z%22%20fill%3D%22%2322c55e%22/%3E%3C/g%3E%3Cg%20transform%3D%22translate%28106.976%2C126.474%29%20scale%280.068%2C-0.068%29%22%3E%3Cpath%20d%3D%22M411%20-14Q327%20-14%20256.5%2014.0Q186%2042%20133.5%2092.0Q81%20142%2052.0%20210.0Q23%20278%2023%20357Q23%20437%2051.5%20504.0Q80%20571%20132.0%20621.0Q184%20671%20254.5%20698.5Q325%20726%20409.0%20726.0Q493%20726%20563.5%20698.5Q634%20671%20686.0%20621.0Q738%20571%20766.5%20503.5Q795%20436%20795%20356Q795%20277%20767%20210Q751%20173%20729%20142L828%2043L720%20-65L616%2039Q592%2024%20564%2014Q494%20-14%20411%20-14ZM409%20162Q449%20162%20481%20174L375%20280L483%20388L582%20289Q591%20320%20591%20357Q591%20401%20578.5%20436.5Q566%20472%20542.0%20497.5Q518%20523%20484.5%20536.5Q451%20550%20409%20550Q353%20550%20312.0%20526.5Q271%20503%20249.0%20459.5Q227%20416%20227%20357Q227%20312%20239.5%20276.0Q252%20240%20276.0%20214.5Q300%20189%20333.5%20175.5Q367%20162%20409%20162Z%22%20fill%3D%22%2322c55e%22/%3E%3C/g%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -235,8 +236,10 @@ input,select,textarea,button{font-family:var(--font)}
 @media(max-width:600px){.score-hero{padding:16px;gap:14px;margin-bottom:12px}}
 .report-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:800px){.report-grid{grid-template-columns:1fr}}
-.drills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-@media(max-width:600px){.drills-grid{grid-template-columns:1fr}}
+.drills-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+@media(max-width:1100px){.drills-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:750px){.drills-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.drills-grid{grid-template-columns:1fr}}
 .hist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:8px}
 @media(max-width:600px){.hist-grid{grid-template-columns:1fr}}
 .score-ring-wrap{position:relative;width:62px;height:62px;flex-shrink:0}
@@ -301,7 +304,7 @@ input,select,textarea,button{font-family:var(--font)}
 
 <!-- TOP BAR -->
 <div class="tbar" id="tbar" style="display:none">
-  <div class="tbar-logo" onclick="show('home')" style="cursor:pointer">FIELD<em>IQ</em></div>
+  <div class="tbar-logo" onclick="show('home')" style="cursor:pointer">GAME<em>IQ</em></div>
   <div class="tbar-spacer"></div>
   <button class="tb" onclick="goPage('history')">History</button>
   <button class="tb" onclick="goPage('drills')">My Drills</button>
@@ -331,7 +334,15 @@ input,select,textarea,button{font-family:var(--font)}
 <!-- LANDING (new/logged-out users) -->
 <div class="scr on" id="landing">
   <div class="land-wrap">
-    <div class="land-logo">FIELD<em>IQ</em></div>
+    <div class="land-logo" style="display:flex;flex-direction:column;align-items:center;gap:12px">
+      <svg viewBox="0 0 200 200" width="96" height="96">
+        <path d="M 100 14 L 176 40 L 176 106 Q 176 150 100 186 Q 24 150 24 106 L 24 40 Z" fill="none" stroke="#22c55e" stroke-width="5" stroke-linejoin="round"/>
+        <g transform="translate(35.156,126.474) scale(0.068,-0.068)"><path d="M410 -12Q327 -12 256.5 15.5Q186 43 133.5 93.0Q81 143 52.0 210.0Q23 277 23 356Q23 436 53.5 503.0Q84 570 138.5 619.5Q193 669 265.0 696.5Q337 724 419 724Q518 724 596.5 690.0Q675 656 724 598L589 463Q552 506 512.0 527.0Q472 548 416 548Q363 548 320.0 524.5Q277 501 251.5 458.0Q226 415 226.0 357.0Q226 299 249.5 255.5Q273 212 315.0 188.0Q357 164 413 164Q467 164 504.0 185.0Q541 206 561 245Q563 250 565 255L386 260V420H781V390Q781 262 734.5 172.0Q688 82 604.5 35.0Q521 -12 410 -12Z" fill="#e2e8f0"/></g>
+        <g transform="translate(87.352,126.474) scale(0.068,-0.068)"><path d="M59 0V712H259V0Z" fill="#22c55e"/></g>
+        <g transform="translate(106.976,126.474) scale(0.068,-0.068)"><path d="M411 -14Q327 -14 256.5 14.0Q186 42 133.5 92.0Q81 142 52.0 210.0Q23 278 23 357Q23 437 51.5 504.0Q80 571 132.0 621.0Q184 671 254.5 698.5Q325 726 409.0 726.0Q493 726 563.5 698.5Q634 671 686.0 621.0Q738 571 766.5 503.5Q795 436 795 356Q795 277 767 210Q751 173 729 142L828 43L720 -65L616 39Q592 24 564 14Q494 -14 411 -14ZM409 162Q449 162 481 174L375 280L483 388L582 289Q591 320 591 357Q591 401 578.5 436.5Q566 472 542.0 497.5Q518 523 484.5 536.5Q451 550 409 550Q353 550 312.0 526.5Q271 503 249.0 459.5Q227 416 227 357Q227 312 239.5 276.0Q252 240 276.0 214.5Q300 189 333.5 175.5Q367 162 409 162Z" fill="#22c55e"/></g>
+      </svg>
+      <span>GAME<em>IQ</em></span>
+    </div>
     <div class="land-sub">Soccer Performance Analysis</div>
     <h1 class="land-h">KNOW<br><span class="l2">YOUR</span><br><span class="l3">GAME.</span></h1>
     <p class="land-p">Log every decision from your match footage. Get an honest performance breakdown and drills built for your exact mistakes.</p>
@@ -346,17 +357,21 @@ input,select,textarea,button{font-family:var(--font)}
 <div class="note-ov" id="authOv">
   <div class="note-box" style="max-width:380px;border-radius:14px;margin-bottom:auto;margin-top:auto;align-self:center">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div class="note-evt" id="authTitle">Sign up</div>
+      <div class="note-evt" id="authTitle">Create an account</div>
       <button onclick="closeAuth()" style="background:none;border:none;color:var(--t3);font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <!-- Mode tabs - can't be missed -->
+    <div style="display:flex;gap:0;margin-bottom:16px;background:var(--s2);border-radius:var(--rs);padding:3px">
+      <button onclick="setAuthMode('signup')" id="authTabSignup" style="flex:1;padding:9px;border:none;background:none;color:var(--t2);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;border-radius:6px;transition:all .15s">Sign up</button>
+      <button onclick="setAuthMode('login')" id="authTabLogin" style="flex:1;padding:9px;border:none;background:none;color:var(--t2);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;border-radius:6px;transition:all .15s">Log in</button>
     </div>
     <div id="authError" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:var(--rs);padding:8px 10px;font-size:11px;color:var(--err);margin-bottom:10px"></div>
     <div class="fg" id="authNameRow"><label class="fl">Name</label><input type="text" class="fi" id="authName" placeholder="Your name"></div>
     <div class="fg"><label class="fl">Email</label><input type="email" class="fi" id="authEmail" placeholder="you@example.com" autocomplete="email"></div>
     <div class="fg"><label class="fl">Password</label><input type="password" class="fi" id="authPass" placeholder="Min 6 characters" autocomplete="current-password"></div>
-    <button class="land-btn land-btn-primary" style="width:100%;margin-top:6px" onclick="submitAuth()" id="authSubmit">Sign up</button>
-    <p style="text-align:center;font-size:11px;color:var(--t3);margin-top:12px">
-      <span id="authSwitchText">Already have an account?</span>
-      <a onclick="switchAuth()" style="color:var(--accent);cursor:pointer;font-weight:600;margin-left:4px" id="authSwitchLink">Log in</a>
+    <button class="land-btn land-btn-primary" style="width:100%;margin-top:6px" onclick="submitAuth()" id="authSubmit">Create account</button>
+    <p style="text-align:center;font-size:10px;color:var(--t4);margin-top:12px">
+      <a onclick="debugShowAccounts()" style="color:var(--t3);cursor:pointer;text-decoration:underline">See accounts in this browser</a>
     </p>
   </div>
 </div>
@@ -609,21 +624,50 @@ function newGame() {
 // ═══ AUTH ═══
 let authMode = 'signup';
 function openAuth(mode) {
-  authMode = mode;
-  document.getElementById('authTitle').textContent = mode === 'signup' ? 'Sign up' : 'Log in';
-  document.getElementById('authSubmit').textContent = mode === 'signup' ? 'Sign up' : 'Log in';
-  document.getElementById('authNameRow').style.display = mode === 'signup' ? 'block' : 'none';
-  document.getElementById('authSwitchText').textContent = mode === 'signup' ? 'Already have an account?' : "Don't have an account?";
-  document.getElementById('authSwitchLink').textContent = mode === 'signup' ? 'Log in' : 'Sign up';
-  document.getElementById('authError').style.display = 'none';
   document.getElementById('authName').value = '';
   document.getElementById('authEmail').value = '';
   document.getElementById('authPass').value = '';
+  setAuthMode(mode);
   document.getElementById('authOv').classList.add('open');
 }
+function setAuthMode(mode) {
+  authMode = mode;
+  document.getElementById('authTitle').textContent = mode === 'signup' ? 'Create an account' : 'Log in';
+  document.getElementById('authSubmit').textContent = mode === 'signup' ? 'Create account' : 'Log in';
+  document.getElementById('authNameRow').style.display = mode === 'signup' ? 'block' : 'none';
+  document.getElementById('authError').style.display = 'none';
+  // Visual tab state
+  const tabSignup = document.getElementById('authTabSignup');
+  const tabLogin = document.getElementById('authTabLogin');
+  if (tabSignup && tabLogin) {
+    if (mode === 'signup') {
+      tabSignup.style.background = 'var(--accent)';
+      tabSignup.style.color = '#000';
+      tabLogin.style.background = 'none';
+      tabLogin.style.color = 'var(--t2)';
+    } else {
+      tabLogin.style.background = 'var(--accent)';
+      tabLogin.style.color = '#000';
+      tabSignup.style.background = 'none';
+      tabSignup.style.color = 'var(--t2)';
+    }
+  }
+}
 function closeAuth() { document.getElementById('authOv').classList.remove('open'); }
-function switchAuth() { openAuth(authMode === 'signup' ? 'login' : 'signup'); }
 function showAuthError(msg) { const e = document.getElementById('authError'); e.textContent = msg; e.style.display = 'block'; }
+function debugShowAccounts() {
+  const users = getUsers();
+  const emails = Object.keys(users);
+  const currentLogin = localStorage.getItem('fiq_user');
+  let msg = '';
+  if (emails.length === 0) {
+    msg = 'No accounts are stored in this browser. You need to sign up first.';
+  } else {
+    msg = 'Accounts stored in this browser:\n\n' + emails.map(e => '• ' + e + (e === currentLogin ? ' (currently logged in)' : '')).join('\n');
+    msg += '\n\nIf your email isn\'t listed, you signed up in a different browser or the data was cleared.';
+  }
+  alert(msg);
+}
 // Simple hash for passwords (not cryptographically secure but better than plaintext for local storage)
 function hashPw(s) { let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; } return h.toString(36); }
 function getUsers() { try { return JSON.parse(localStorage.getItem('fiq_users') || '{}'); } catch(e) { return {}; } }
@@ -636,21 +680,25 @@ function submitAuth() {
   if (!email.includes('@')) return showAuthError('Invalid email.');
   if (pass.length < 6) return showAuthError('Password must be at least 6 characters.');
   const users = getUsers();
+  const existing = users[email];
   if (authMode === 'signup') {
     if (!name) return showAuthError('Name required.');
-    if (users[email]) return showAuthError('An account with this email already exists.');
+    // Strict: if the email already has an account, refuse
+    if (existing) return showAuthError('An account with "' + email + '" already exists. Switch to Log in.');
     users[email] = { name, pw: hashPw(pass), created: Date.now() };
     saveUsers(users);
     localStorage.setItem('fiq_user', email);
     closeAuth();
     show('home');
-  } else {
-    const u = users[email];
-    if (!u) return showAuthError('No account found with this email.');
-    if (u.pw !== hashPw(pass)) return showAuthError('Incorrect password.');
+  } else if (authMode === 'login') {
+    if (!existing) return showAuthError('No account found with "' + email + '". Switch to Sign up to create one.');
+    if (existing.pw !== hashPw(pass)) return showAuthError('Incorrect password for "' + email + '".');
     localStorage.setItem('fiq_user', email);
     closeAuth();
     show('home');
+  } else {
+    // Mode not set — this should never happen, but fail loud if it does
+    return showAuthError('Auth mode error. Please refresh the page.');
   }
 }
 function logout() {
@@ -849,7 +897,10 @@ function renderGameView(r,evCount,entry) {
   const drillHTML=drills.slice(0,3).map(d=>drillCard(d)).join('');
 
   document.getElementById('gvBody').innerHTML=
-    (sub?`<p style="font-size:11px;color:var(--t3);margin-bottom:10px">${sub}</p>`:'')+
+    `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;flex-wrap:wrap">`+
+    (sub?`<p style="font-size:11px;color:var(--t3);margin:0">${sub}</p>`:'<span></span>')+
+    `<button class="hb hb-go" onclick="shareGame(${entry?entry.id:'null'})" style="font-size:11px;padding:6px 12px">📤 Share</button>`+
+    `</div>`+
     `<div class="score-hero"><div class="score-ring-wrap"><svg width="62" height="62"><circle cx="31" cy="31" r="26" fill="none" stroke="var(--s3)" stroke-width="4"/><circle cx="31" cy="31" r="26" fill="none" stroke="${col(ov)}" stroke-width="4" stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round"/></svg><div class="score-val">${ov}</div></div><div class="score-right"><div class="score-sum">"${r.summary||''}"</div><div class="score-stats"><div class="ss w"><b>${ec}</b>events</div><div class="ss g"><b>${good.length}</b>good</div><div class="ss r"><b>${bad.length}</b>issues</div><div class="ss"><b>${pats.length}</b>patterns</div></div></div></div>`+
     (r.coachContextNote?`<div class="coach-note">${r.coachContextNote}</div>`:'')+
     `<div class="card"><div class="sec-title">Ratings</div><div class="main-r">${mainHTML}</div>${subHTML}</div>`+
@@ -859,6 +910,122 @@ function renderGameView(r,evCount,entry) {
     `<div class="card"><div class="sec-title">Patterns</div>${patHTML||'<p style="color:var(--t4);font-size:12px">None detected.</p>'}</div>`+
     `<div class="card"><div class="sec-title">Recommended drills</div>${drillHTML||'<p style="color:var(--t4);font-size:12px">Not enough data.</p>'}</div>`+
     `</div>`;
+}
+
+function shareGame(id) {
+  let entry = null;
+  if (id) entry = hist.find(x => x.id === id);
+  if (!entry && currentReport) {
+    // Build a temp entry from current report
+    entry = { id: Date.now(), date: G.date || new Date().toLocaleDateString(), pos: G.pos, formation: G.formation, opp: G.opp, league: G.league, styles: [...G.styles], score: currentReport.overallScore || 60, summary: currentReport.summary || '', eventCount: G.events.length, fullReport: currentReport };
+  }
+  if (!entry) { alert('No game to share.'); return; }
+  try {
+    // Compact shareable payload
+    const payload = { v: 1, p: entry.pos, f: entry.formation, o: entry.opp, l: entry.league, d: entry.date, s: entry.score, sum: entry.summary, ec: entry.eventCount, r: entry.fullReport };
+    const json = JSON.stringify(payload);
+    // Base64 encode (handles unicode safely)
+    const b64 = btoa(unescape(encodeURIComponent(json)));
+    const url = window.location.origin + window.location.pathname + '?share=' + b64;
+    // Open share modal
+    openShareModal(url, entry);
+  } catch (e) {
+    alert('Could not create share link: ' + e.message);
+  }
+}
+
+function openShareModal(url, entry) {
+  const existing = document.getElementById('shareModal');
+  if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'shareModal';
+  modal.className = 'note-ov';
+  // Detect mobile (touch + small screen OR native share API available)
+  const isMobile = ('ontouchstart' in window) && (window.innerWidth < 900 || !!navigator.share);
+  const mobileBtn = isMobile ? '<button class="note-save" style="background:var(--s3);color:var(--t1)" onclick="nativeShare()">Other</button>' : '';
+  modal.innerHTML = `
+    <div class="note-box" style="max-width:520px;border-radius:14px;margin-top:auto;margin-bottom:auto;align-self:center">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="note-evt">Share this game</div>
+        <button onclick="closeShareModal()" style="background:none;border:none;color:var(--t3);font-size:18px;cursor:pointer">✕</button>
+      </div>
+      <p class="note-hint">Anyone with this link can view the full report — score, ratings, moments, patterns, and drills. No sign-in needed.</p>
+      <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:10px;font-size:11px;color:var(--t2);word-break:break-all;font-family:monospace;max-height:80px;overflow-y:auto" id="shareUrlBox"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="note-save" onclick="copyShareUrl()" id="copyBtn">Copy link</button>
+        ${mobileBtn}
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  window._shareUrl = url;
+  window._shareEntry = entry;
+  document.getElementById('shareUrlBox').textContent = url;
+  // Trigger animation after append
+  requestAnimationFrame(() => modal.classList.add('open'));
+}
+function closeShareModal() { const m = document.getElementById('shareModal'); if (m) m.classList.remove('open'); }
+function copyShareUrl() {
+  const url = window._shareUrl;
+  if (!url) return;
+  const btn = document.getElementById('copyBtn');
+  navigator.clipboard.writeText(url).then(() => {
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.textContent = 'Copy link'; }, 2000);
+  }).catch(() => {
+    // Fallback: select the text
+    const box = document.getElementById('shareUrlBox');
+    const range = document.createRange();
+    range.selectNode(box);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    try { document.execCommand('copy'); btn.textContent = '✓ Copied!'; setTimeout(() => { btn.textContent = 'Copy link'; }, 2000); }
+    catch(e) { alert('Copy failed — select the link above and copy it manually.'); }
+  });
+}
+function shareToTwitter() {
+  const e = window._shareEntry, url = window._shareUrl;
+  const text = `I scored ${e.score}/100 on GameIQ${e.opp ? ' vs ' + e.opp : ''}. See the full report:`;
+  window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(url), '_blank');
+}
+function shareToWhatsApp() {
+  const e = window._shareEntry, url = window._shareUrl;
+  const text = `I scored ${e.score}/100 on GameIQ${e.opp ? ' vs ' + e.opp : ''}. Full report: ${url}`;
+  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+}
+function nativeShare() {
+  const e = window._shareEntry, url = window._shareUrl;
+  const text = `I scored ${e.score}/100 on GameIQ${e.opp ? ' vs ' + e.opp : ''}`;
+  if (navigator.share) {
+    navigator.share({ title: 'GameIQ Report', text, url }).catch(() => {});
+  } else {
+    alert('Your browser doesn\'t support native sharing. Use "Copy link" instead.');
+  }
+}
+
+function checkSharedReport() {
+  const params = new URLSearchParams(window.location.search);
+  const shareData = params.get('share');
+  if (!shareData) return false;
+  try {
+    const json = decodeURIComponent(escape(atob(shareData)));
+    const payload = JSON.parse(json);
+    const entry = { id: 'shared', date: payload.d, pos: payload.p, formation: payload.f, opp: payload.o, league: payload.l, score: payload.s, summary: payload.sum, eventCount: payload.ec, fullReport: payload.r, styles: [] };
+    currentReport = payload.r;
+    // Hide the top bar for shared view
+    document.getElementById('tbar').style.display = 'flex';
+    show('game-view');
+    renderGameView(payload.r, payload.ec, entry);
+    // Add a banner indicating this is a shared view
+    const body = document.getElementById('gvBody');
+    const banner = document.createElement('div');
+    banner.style.cssText = 'background:var(--accent-glow);border:1px solid var(--accent);border-radius:var(--rs);padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--accent);text-align:center;font-weight:600';
+    banner.innerHTML = '📤 Viewing a shared game report. <a href="' + window.location.origin + window.location.pathname + '" style="color:var(--accent);text-decoration:underline;margin-left:6px">Open GameIQ</a>';
+    body.insertBefore(banner, body.firstChild);
+    return true;
+  } catch (e) {
+    console.error('Failed to load shared report:', e);
+    return false;
+  }
 }
 
 function drillCard(d) {
@@ -1176,8 +1343,9 @@ window.logBack = logBack;
 window.toggleMenu = toggleMenu;
 window.menuNav = menuNav;
 window.openAuth = openAuth;
+window.debugShowAccounts = debugShowAccounts;
 window.closeAuth = closeAuth;
-window.switchAuth = switchAuth;
+window.setAuthMode = setAuthMode;
 window.submitAuth = submitAuth;
 window.logout = logout;
 window.next = next;
@@ -1216,7 +1384,18 @@ window.renderCustomStyles = renderCustomStyles;
 initLeague();
 renderCustomForms();
 renderCustomStyles();
-if(getCurrentUser()){show('home');}
+window.shareGame = shareGame;
+window.closeShareModal = closeShareModal;
+window.copyShareUrl = copyShareUrl;
+window.shareToTwitter = shareToTwitter;
+window.shareToWhatsApp = shareToWhatsApp;
+window.nativeShare = nativeShare;
+
+// Check if opening a shared report link first
+if (!checkSharedReport()) {
+  if(getCurrentUser()){show('home');}
+}
 </script>
 </body>
 </html>
+

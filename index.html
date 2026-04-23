@@ -6,6 +6,7 @@
 <title>GameIQ</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Cpath%20d%3D%22M%20100%2014%20L%20176%2040%20L%20176%20106%20Q%20176%20150%20100%20186%20Q%2024%20150%2024%20106%20L%2024%2040%20Z%22%20fill%3D%22none%22%20stroke%3D%22%2322c55e%22%20stroke-width%3D%225%22%20stroke-linejoin%3D%22round%22/%3E%3Cg%20transform%3D%22translate%2835.156%2C126.474%29%20scale%280.068%2C-0.068%29%22%3E%3Cpath%20d%3D%22M410%20-12Q327%20-12%20256.5%2015.5Q186%2043%20133.5%2093.0Q81%20143%2052.0%20210.0Q23%20277%2023%20356Q23%20436%2053.5%20503.0Q84%20570%20138.5%20619.5Q193%20669%20265.0%20696.5Q337%20724%20419%20724Q518%20724%20596.5%20690.0Q675%20656%20724%20598L589%20463Q552%20506%20512.0%20527.0Q472%20548%20416%20548Q363%20548%20320.0%20524.5Q277%20501%20251.5%20458.0Q226%20415%20226.0%20357.0Q226%20299%20249.5%20255.5Q273%20212%20315.0%20188.0Q357%20164%20413%20164Q467%20164%20504.0%20185.0Q541%20206%20561%20245Q563%20250%20565%20255L386%20260V420H781V390Q781%20262%20734.5%20172.0Q688%2082%20604.5%2035.0Q521%20-12%20410%20-12Z%22%20fill%3D%22%23e2e8f0%22/%3E%3C/g%3E%3Cg%20transform%3D%22translate%2887.352%2C126.474%29%20scale%280.068%2C-0.068%29%22%3E%3Cpath%20d%3D%22M59%200V712H259V0Z%22%20fill%3D%22%2322c55e%22/%3E%3C/g%3E%3Cg%20transform%3D%22translate%28106.976%2C126.474%29%20scale%280.068%2C-0.068%29%22%3E%3Cpath%20d%3D%22M411%20-14Q327%20-14%20256.5%2014.0Q186%2042%20133.5%2092.0Q81%20142%2052.0%20210.0Q23%20278%2023%20357Q23%20437%2051.5%20504.0Q80%20571%20132.0%20621.0Q184%20671%20254.5%20698.5Q325%20726%20409.0%20726.0Q493%20726%20563.5%20698.5Q634%20671%20686.0%20621.0Q738%20571%20766.5%20503.5Q795%20436%20795%20356Q795%20277%20767%20210Q751%20173%20729%20142L828%2043L720%20-65L616%2039Q592%2024%20564%2014Q494%20-14%20411%20-14ZM409%20162Q449%20162%20481%20174L375%20280L483%20388L582%20289Q591%20320%20591%20357Q591%20401%20578.5%20436.5Q566%20472%20542.0%20497.5Q518%20523%20484.5%20536.5Q451%20550%20409%20550Q353%20550%20312.0%20526.5Q271%20503%20249.0%20459.5Q227%20416%20227%20357Q227%20312%20239.5%20276.0Q252%20240%20276.0%20214.5Q300%20189%20333.5%20175.5Q367%20162%20409%20162Z%22%20fill%3D%22%2322c55e%22/%3E%3C/g%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -582,18 +583,39 @@ input,select,textarea,button{font-family:var(--font)}
 <div class="scr" id="deleted"><div class="wrap"><button class="back-btn" onclick="goBack()">← Back</button><div class="sec-title">Deleted Games</div><div id="deletedBody"></div></div></div>
 
 <script>
+// ═══ SUPABASE ═══
+const SUPABASE_URL = 'https://wlrrparwwaeyxuhcoqmv.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Vw5hUwzutg2x1AXGA-Cgog_44ogOcQb';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 // ═══ STATE ═══
 const G = { pos:'', date:'', opp:'', league:'', formation:'', styles:[], coach:'', focus:'', events:[] };
 let customOut = '', pendingEv = null, currentReport = null, viewingGameId = null;
 let hist = [], del = [], savedLg = [], savedDrillsList = [], cachedDrillPlan = null, customForms = [], customStyles = [];
-try { hist = JSON.parse(localStorage.getItem('fiq_h') || localStorage.getItem('fiq_history') || '[]'); } catch(e) { hist = []; }
-try { del = JSON.parse(localStorage.getItem('fiq_d') || localStorage.getItem('fiq_deleted') || '[]'); } catch(e) { del = []; }
-try { savedLg = JSON.parse(localStorage.getItem('fiq_leagues') || '[]'); } catch(e) { savedLg = []; }
-try { customForms = JSON.parse(localStorage.getItem('fiq_custom_forms') || '[]'); } catch(e) { customForms = []; }
-try { customStyles = JSON.parse(localStorage.getItem('fiq_custom_styles') || '[]'); } catch(e) { customStyles = []; }
-try { savedDrillsList = JSON.parse(localStorage.getItem('fiq_saved_drills') || '[]'); } catch(e) { savedDrillsList = []; }
+let currentUser = null;
 try { cachedDrillPlan = JSON.parse(localStorage.getItem('fiq_drill_plan') || 'null'); } catch(e) { cachedDrillPlan = null; }
-const saveAll = () => { try { localStorage.setItem('fiq_h', JSON.stringify(hist)); localStorage.setItem('fiq_history', JSON.stringify(hist)); localStorage.setItem('fiq_d', JSON.stringify(del)); localStorage.setItem('fiq_deleted', JSON.stringify(del)); localStorage.setItem('fiq_leagues', JSON.stringify(savedLg)); localStorage.setItem('fiq_saved_drills', JSON.stringify(savedDrillsList)); localStorage.setItem('fiq_custom_forms', JSON.stringify(customForms)); localStorage.setItem('fiq_custom_styles', JSON.stringify(customStyles)); if(cachedDrillPlan) localStorage.setItem('fiq_drill_plan', JSON.stringify(cachedDrillPlan)); } catch(e){} };
+const saveAll = () => { try { if(cachedDrillPlan) localStorage.setItem('fiq_drill_plan', JSON.stringify(cachedDrillPlan)); } catch(e){} };
+
+async function loadUserData() {
+  if (!currentUser) return;
+  try {
+    const { data: games } = await sb.from('games').select('*').order('created_at', { ascending: false });
+    hist = (games || []).map(r => ({ id:r.id, date:r.game_date||'', pos:r.position||'', formation:r.formation||'', opp:r.opponent||'', league:r.league||'', styles:r.styles||[], score:r.score, summary:r.summary||'', eventCount:r.event_count||0, fullReport:r.full_report }));
+    const { data: drills } = await sb.from('saved_drills').select('*').order('created_at', { ascending: false });
+    savedDrillsList = (drills || []).map(r => ({ ...r.drill_data, _dbId: r.id }));
+    const { data: prefs } = await sb.from('user_prefs').select('*').eq('user_id', currentUser.id).maybeSingle();
+    if (prefs) { customForms = prefs.custom_forms||[]; customStyles = prefs.custom_styles||[]; savedLg = prefs.saved_leagues||[]; }
+    else { customForms = []; customStyles = []; savedLg = []; }
+  } catch (err) { console.error('Load data failed:', err); }
+}
+
+async function saveUserPrefs() {
+  if (!currentUser) return;
+  try {
+    await sb.from('user_prefs').upsert({ user_id: currentUser.id, custom_forms: customForms, custom_styles: customStyles, saved_leagues: savedLg, updated_at: new Date().toISOString() });
+  } catch (err) { console.error('Save prefs failed:', err); }
+}
+
 let histFilter = '', navStack = [], drillGameCount = 5;
 
 // ═══ NAVIGATION ═══
@@ -621,7 +643,7 @@ function newGame() {
   showStep(1);
 }
 
-// ═══ AUTH ═══
+// ═══ AUTH (Supabase) ═══
 let authMode = 'signup';
 function openAuth(mode) {
   document.getElementById('authName').value = '';
@@ -636,82 +658,61 @@ function setAuthMode(mode) {
   document.getElementById('authSubmit').textContent = mode === 'signup' ? 'Create account' : 'Log in';
   document.getElementById('authNameRow').style.display = mode === 'signup' ? 'block' : 'none';
   document.getElementById('authError').style.display = 'none';
-  // Visual tab state
   const tabSignup = document.getElementById('authTabSignup');
   const tabLogin = document.getElementById('authTabLogin');
   if (tabSignup && tabLogin) {
     if (mode === 'signup') {
-      tabSignup.style.background = 'var(--accent)';
-      tabSignup.style.color = '#000';
-      tabLogin.style.background = 'none';
-      tabLogin.style.color = 'var(--t2)';
+      tabSignup.style.background = 'var(--accent)'; tabSignup.style.color = '#000';
+      tabLogin.style.background = 'none'; tabLogin.style.color = 'var(--t2)';
     } else {
-      tabLogin.style.background = 'var(--accent)';
-      tabLogin.style.color = '#000';
-      tabSignup.style.background = 'none';
-      tabSignup.style.color = 'var(--t2)';
+      tabLogin.style.background = 'var(--accent)'; tabLogin.style.color = '#000';
+      tabSignup.style.background = 'none'; tabSignup.style.color = 'var(--t2)';
     }
   }
 }
 function closeAuth() { document.getElementById('authOv').classList.remove('open'); }
 function showAuthError(msg) { const e = document.getElementById('authError'); e.textContent = msg; e.style.display = 'block'; }
-function debugShowAccounts() {
-  const users = getUsers();
-  const emails = Object.keys(users);
-  const currentLogin = localStorage.getItem('fiq_user');
-  let msg = '';
-  if (emails.length === 0) {
-    msg = 'No accounts are stored in this browser. You need to sign up first.';
-  } else {
-    msg = 'Accounts stored in this browser:\n\n' + emails.map(e => '• ' + e + (e === currentLogin ? ' (currently logged in)' : '')).join('\n');
-    msg += '\n\nIf your email isn\'t listed, you signed up in a different browser or the data was cleared.';
-  }
-  alert(msg);
-}
-// Simple hash for passwords (not cryptographically secure but better than plaintext for local storage)
-function hashPw(s) { let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; } return h.toString(36); }
-function getUsers() { try { return JSON.parse(localStorage.getItem('fiq_users') || '{}'); } catch(e) { return {}; } }
-function saveUsers(u) { try { localStorage.setItem('fiq_users', JSON.stringify(u)); } catch(e){} }
-function submitAuth() {
+function debugShowAccounts() { alert('Accounts are now stored in the cloud. Log in with your email and password from any device.'); }
+
+async function submitAuth() {
   const email = document.getElementById('authEmail').value.trim().toLowerCase();
   const pass = document.getElementById('authPass').value;
   const name = document.getElementById('authName').value.trim();
   if (!email || !pass) return showAuthError('Email and password required.');
   if (!email.includes('@')) return showAuthError('Invalid email.');
   if (pass.length < 6) return showAuthError('Password must be at least 6 characters.');
-  const users = getUsers();
-  const existing = users[email];
-  if (authMode === 'signup') {
-    if (!name) return showAuthError('Name required.');
-    // Strict: if the email already has an account, refuse
-    if (existing) return showAuthError('An account with "' + email + '" already exists. Switch to Log in.');
-    users[email] = { name, pw: hashPw(pass), created: Date.now() };
-    saveUsers(users);
-    localStorage.setItem('fiq_user', email);
-    closeAuth();
-    show('home');
-  } else if (authMode === 'login') {
-    if (!existing) return showAuthError('No account found with "' + email + '". Switch to Sign up to create one.');
-    if (existing.pw !== hashPw(pass)) return showAuthError('Incorrect password for "' + email + '".');
-    localStorage.setItem('fiq_user', email);
-    closeAuth();
-    show('home');
-  } else {
-    // Mode not set — this should never happen, but fail loud if it does
-    return showAuthError('Auth mode error. Please refresh the page.');
+  const btn = document.getElementById('authSubmit');
+  btn.disabled = true; btn.textContent = 'Please wait...';
+  try {
+    if (authMode === 'signup') {
+      if (!name) { btn.disabled = false; btn.textContent = 'Create account'; return showAuthError('Name required.'); }
+      const { data, error } = await sb.auth.signUp({ email, password: pass, options: { data: { full_name: name } } });
+      if (error) throw error;
+      if (!data.user) throw new Error('Signup failed.');
+      currentUser = data.user;
+      await loadUserData();
+      closeAuth(); show('home');
+    } else {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+      if (error) throw error;
+      currentUser = data.user;
+      await loadUserData();
+      closeAuth(); show('home');
+    }
+  } catch (err) {
+    showAuthError(err.message);
   }
+  btn.disabled = false; btn.textContent = authMode === 'signup' ? 'Create account' : 'Log in';
 }
-function logout() {
+
+async function logout() {
   if (!confirm('Log out?')) return;
-  localStorage.removeItem('fiq_user');
+  await sb.auth.signOut();
+  currentUser = null; hist = []; del = []; savedDrillsList = []; customForms = []; customStyles = []; savedLg = [];
   show('landing');
 }
-function getCurrentUser() {
-  const email = localStorage.getItem('fiq_user');
-  if (!email) return null;
-  const users = getUsers();
-  return users[email] ? { email, ...users[email] } : null;
-}
+
+function getCurrentUser() { return currentUser; }
 
 // ═══ SETUP ═══
 function showStep(n) { document.querySelectorAll('.step').forEach(s => s.classList.remove('on')); document.getElementById('s'+n).classList.add('on'); for(let i=1;i<=4;i++) document.getElementById('d'+i).className='dot'+(i<n?' done':i===n?' on':''); }
@@ -722,14 +723,14 @@ function next(n) {
     const cf=document.getElementById('cfInput').value.trim();
     if(cf) {
       G.formation=cf;
-      if(!customForms.includes(cf)) { customForms.push(cf); saveAll(); renderCustomForms(); }
+      if(!customForms.includes(cf)) { customForms.push(cf); saveUserPrefs(); renderCustomForms(); }
     }
   }
   if (n===3) {
     const so=document.getElementById('soInput').value.trim();
     if(so&&!G.styles.includes(so)) {
       G.styles.push(so);
-      if(!customStyles.includes(so)) { customStyles.push(so); saveAll(); renderCustomStyles(); }
+      if(!customStyles.includes(so)) { customStyles.push(so); saveUserPrefs(); renderCustomStyles(); }
     }
   }
   showStep(n+1);
@@ -849,8 +850,16 @@ TONE: Honest, direct, like a good coach.`;
     let report;
     try { report = JSON.parse(jsonStr); } catch(e) { throw new Error('JSON parse failed: ' + e.message + '. JSON was: ' + jsonStr.substring(0, 300)); }
     currentReport=report;
-    const entry={id:Date.now(),date:G.date||new Date().toLocaleDateString(),pos:G.pos,formation:G.formation,opp:G.opp,league:G.league,styles:[...G.styles],score:report.overallScore||60,summary:report.summary||'',eventCount:G.events.length,fullReport:report};
-    hist.unshift(entry); saveAll();
+    debugInfo.stage = 'saving to database';
+    const { data: ins, error: insErr } = await sb.from('games').insert({
+      user_id: currentUser.id, game_date: G.date||new Date().toLocaleDateString(),
+      position: G.pos||null, formation: G.formation||null, opponent: G.opp||null,
+      league: G.league||null, styles: G.styles||[], score: report.overallScore||60,
+      summary: report.summary||'', event_count: G.events.length, full_report: report
+    }).select().single();
+    if (insErr) throw new Error('DB save failed: ' + insErr.message);
+    const entry = { id:ins.id, date:ins.game_date, pos:ins.position||'', formation:ins.formation||'', opp:ins.opponent||'', league:ins.league||'', styles:ins.styles||[], score:ins.score, summary:ins.summary||'', eventCount:ins.event_count||0, fullReport:ins.full_report };
+    hist.unshift(entry);
     viewingGameId=entry.id; navStack.push('home'); show('game-view'); renderGameView(report,G.events.length,entry);
   } catch(err) {
     console.error('Analysis error:',err);
@@ -899,7 +908,7 @@ function renderGameView(r,evCount,entry) {
   document.getElementById('gvBody').innerHTML=
     `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;flex-wrap:wrap">`+
     (sub?`<p style="font-size:11px;color:var(--t3);margin:0">${sub}</p>`:'<span></span>')+
-    `<button class="hb hb-go" onclick="shareGame(${entry?entry.id:'null'})" style="font-size:11px;padding:6px 12px">📤 Share</button>`+
+    `<button class="hb hb-go" onclick="shareGame('${entry?entry.id:''}')" style="font-size:11px;padding:6px 12px">📤 Share</button>`+
     `</div>`+
     `<div class="score-hero"><div class="score-ring-wrap"><svg width="62" height="62"><circle cx="31" cy="31" r="26" fill="none" stroke="var(--s3)" stroke-width="4"/><circle cx="31" cy="31" r="26" fill="none" stroke="${col(ov)}" stroke-width="4" stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round"/></svg><div class="score-val">${ov}</div></div><div class="score-right"><div class="score-sum">"${r.summary||''}"</div><div class="score-stats"><div class="ss w"><b>${ec}</b>events</div><div class="ss g"><b>${good.length}</b>good</div><div class="ss r"><b>${bad.length}</b>issues</div><div class="ss"><b>${pats.length}</b>patterns</div></div></div></div>`+
     (r.coachContextNote?`<div class="coach-note">${r.coachContextNote}</div>`:'')+
@@ -1036,11 +1045,18 @@ function drillCard(d) {
   const isSaved=savedDrillsList.some(s=>s.name===d.name);
   return`<div class="drill"><div class="drill-tag drill-tag-${iclass}">${intensity}</div><button class="drill-save ${isSaved?'saved':''}" onclick="saveDrill(this,${json})">${isSaved?'★ Saved':'☆ Save'}</button><div class="drill-name">${d.name}</div><div class="drill-meta">${d.duration||''} · ${d.groupSize||''} ${d.targetMistake?'· '+d.targetMistake:''}</div><div class="drill-desc">${d.description}</div></div>`;
 }
-function saveDrill(btn,d) {
+async function saveDrill(btn,d) {
+  if (!currentUser) return;
   const exists=savedDrillsList.findIndex(s=>s.name===d.name);
-  if(exists>=0){savedDrillsList.splice(exists,1);btn.className='drill-save';btn.textContent='☆ Save';}
-  else{savedDrillsList.push(d);btn.className='drill-save saved';btn.textContent='★ Saved';}
-  saveAll();
+  if(exists>=0){
+    const toDelete = savedDrillsList[exists];
+    savedDrillsList.splice(exists,1); btn.className='drill-save'; btn.textContent='☆ Save';
+    if(toDelete._dbId) { await sb.from('saved_drills').delete().eq('id', toDelete._dbId); }
+  } else {
+    btn.className='drill-save saved'; btn.textContent='★ Saved';
+    const { data, error } = await sb.from('saved_drills').insert({ user_id: currentUser.id, drill_data: d }).select().single();
+    if(!error && data) savedDrillsList.push({ ...d, _dbId: data.id });
+  }
 }
 
 // ═══ HISTORY ═══
@@ -1136,15 +1152,15 @@ function renderHist() {
     h += '<div class="hist-grid">' + list.map(g => {
       const c = col(g.score);
       const t = g.opp ? 'vs ' + g.opp : g.league || 'Game';
-      return `<div class="hg" id="hg${g.id}"><div class="hg-score" style="color:${c}">${g.score}</div><div class="hg-info" onclick="viewHistGame(${g.id})"><div class="hg-t">${t}</div><div class="hg-m">${[g.pos,g.formation,g.league,g.date].filter(Boolean).join(' · ')}</div></div><button class="hg-x" onclick="event.stopPropagation();confirmDel(${g.id})">✕</button></div>`;
+      return `<div class="hg" id="hg${g.id}"><div class="hg-score" style="color:${c}">${g.score}</div><div class="hg-info" onclick="viewHistGame('${g.id}')"><div class="hg-t">${t}</div><div class="hg-m">${[g.pos,g.formation,g.league,g.date].filter(Boolean).join(' · ')}</div></div><button class="hg-x" onclick="event.stopPropagation();confirmDel('${g.id}')">✕</button></div>`;
     }).join('') + '</div>';
   }
 
   b.innerHTML = h;
 }
-function confirmDel(id){const el=document.getElementById('hg'+id);if(!el||el.querySelector('.del-confirm'))return;const d=document.createElement('div');d.className='del-confirm';d.innerHTML=`<span>Delete this game?</span><button class="dc-y" onclick="event.stopPropagation();delGame(${id})">Delete</button><button class="dc-n" onclick="event.stopPropagation();cancelDel(${id})">Cancel</button>`;el.appendChild(d);}
+function confirmDel(id){const el=document.getElementById('hg'+id);if(!el||el.querySelector('.del-confirm'))return;const d=document.createElement('div');d.className='del-confirm';d.innerHTML=`<span>Delete this game?</span><button class="dc-y" onclick="event.stopPropagation();delGame('${id}')">Delete</button><button class="dc-n" onclick="event.stopPropagation();cancelDel('${id}')">Cancel</button>`;el.appendChild(d);}
 function cancelDel(id){const el=document.getElementById('hg'+id);if(el){const c=el.querySelector('.del-confirm');if(c)c.remove();}}
-function delGame(id){const g=hist.find(x=>x.id===id);if(g){del.unshift(g);}hist=hist.filter(x=>x.id!==id);saveAll();renderHist();}
+async function delGame(id){const g=hist.find(x=>x.id===id);if(!g)return;await sb.from('games').delete().eq('id',id);del.unshift(g);hist=hist.filter(x=>x.id!==id);renderHist();}
 function viewHistGame(id){
   const g=hist.find(x=>x.id===id);if(!g)return;
   const report=g.fullReport||{overallScore:g.score,summary:g.summary||'',ratings:{},goodMoments:[],badMoments:[],patterns:[],drills:[]};
@@ -1158,7 +1174,7 @@ function renderDeleted(){
   if(!del.length){b.innerHTML='<div class="empty">No deleted games.</div>';return;}
   b.innerHTML=del.map((g,i)=>{const c=col(g.score);return`<div class="hg"><div class="hg-score" style="color:${c}">${g.score}</div><div class="hg-info"><div class="hg-t">${g.opp?'vs '+g.opp:'Game'}</div><div class="hg-m">${g.pos||''} · ${g.date}</div></div><button class="hb hb-ghost" style="font-size:10px;color:var(--accent)" onclick="restoreGame(${i})">Restore</button></div>`;}).join('');
 }
-function restoreGame(i){const g=del[i];if(!g)return;del.splice(i,1);hist.unshift(g);saveAll();renderDeleted();}
+async function restoreGame(i){const g=del[i];if(!g||!currentUser)return;const{data,error}=await sb.from('games').insert({user_id:currentUser.id,game_date:g.date,position:g.pos||null,formation:g.formation||null,opponent:g.opp||null,league:g.league||null,styles:g.styles||[],score:g.score,summary:g.summary||'',event_count:g.eventCount||0,full_report:g.fullReport}).select().single();if(error){alert('Restore failed');return;}del.splice(i,1);hist.unshift({...g,id:data.id});renderDeleted();}
 
 // ═══ MY DRILLS ═══
 async function renderDrills(){
@@ -1294,12 +1310,15 @@ function renderSavedDrills(){
 function renderDash(){
   const u=getCurrentUser();
   const greet=document.getElementById('dashGreeting');
-  if(greet)greet.textContent=u?'Welcome back, '+u.name.split(' ')[0]:'Welcome back';
+  if(greet) {
+    const name = u ? (u.user_metadata?.full_name || u.email || '') : '';
+    greet.textContent = name ? 'Welcome back, ' + name.split(' ')[0] : 'Welcome back';
+  }
   const recent=hist.slice(0,5);
   let h='';
   if(recent.length){
     h+='<div class="dash-label">Recent games</div>';
-    h+='<div class="dash-grid">'+recent.map(g=>{const c=col(g.score);const t=g.opp?'vs '+g.opp:g.league||'Game';return`<div class="hg" onclick="viewHistGame(${g.id})"><div class="hg-score" style="color:${c}">${g.score}</div><div class="hg-info"><div class="hg-t">${t}</div><div class="hg-m">${[g.pos,g.date].filter(Boolean).join(' · ')}</div></div></div>`;}).join('')+'</div>';
+    h+='<div class="dash-grid">'+recent.map(g=>{const c=col(g.score);const t=g.opp?'vs '+g.opp:g.league||'Game';return`<div class="hg" onclick="viewHistGame('${g.id}')"><div class="hg-score" style="color:${c}">${g.score}</div><div class="hg-info"><div class="hg-t">${t}</div><div class="hg-m">${[g.pos,g.date].filter(Boolean).join(' · ')}</div></div></div>`;}).join('')+'</div>';
   }
   document.getElementById('dashRecent').innerHTML=h;
 }
@@ -1310,11 +1329,11 @@ function initLeague(){
   const inp=document.getElementById('iLeague'),sug=document.getElementById('leagueSug');
   inp.addEventListener('input',function(){const v=this.value.trim().toLowerCase();if(!v){sug.style.display='none';return;}const m=savedLg.filter(l=>l.toLowerCase().includes(v)&&l.toLowerCase()!==v);if(!m.length){sug.style.display='none';return;}sug.style.display='flex';sug.innerHTML=m.map(l=>`<div style="padding:3px 8px;background:var(--s2);border:1px solid var(--border2);border-radius:16px;font-size:10px;color:var(--t2);cursor:pointer" onclick="pickLeague('${l.replace(/'/g,"\\'")}')">${l}</div>`).join('');});
   inp.addEventListener('focus',function(){this.dispatchEvent(new Event('input'));});
-  inp.addEventListener('blur',function(){setTimeout(()=>{sug.style.display='none';},200);const v=this.value.trim();if(v&&!savedLg.includes(v)){savedLg.push(v);if(savedLg.length>20)savedLg=savedLg.slice(-20);saveAll();renderLeagueChips();}});
+  inp.addEventListener('blur',function(){setTimeout(()=>{sug.style.display='none';},200);const v=this.value.trim();if(v&&!savedLg.includes(v)){savedLg.push(v);if(savedLg.length>20)savedLg=savedLg.slice(-20);saveUserPrefs();renderLeagueChips();}});
 }
 function pickLeague(l){document.getElementById('iLeague').value=l;G.league=l;document.getElementById('leagueSug').style.display='none';}
 function renderLeagueChips(){const row=document.getElementById('savedLeagues');if(!row)return;if(!savedLg.length){row.innerHTML='';return;}row.innerHTML=savedLg.slice().reverse().slice(0,6).map(l=>`<div style="padding:3px 8px;background:var(--s1);border:1px solid var(--border);border-radius:16px;font-size:10px;color:var(--t3);cursor:pointer;display:inline-flex;align-items:center;gap:3px" onclick="pickLeague('${l.replace(/'/g,"\\'")}')"> ${l}<span onclick="event.stopPropagation();rmLeague('${l.replace(/'/g,"\\'")}')" style="opacity:.4;font-size:11px;cursor:pointer">×</span></div>`).join('');}
-function rmLeague(l){savedLg=savedLg.filter(x=>x!==l);saveAll();renderLeagueChips();}
+function rmLeague(l){savedLg=savedLg.filter(x=>x!==l);saveUserPrefs();renderLeagueChips();}
 
 // ═══ RESET ═══
 function resetState(){
@@ -1380,10 +1399,6 @@ window.clearHistFilters = clearHistFilters;
 
 window.renderCustomForms = renderCustomForms;
 window.renderCustomStyles = renderCustomStyles;
-
-initLeague();
-renderCustomForms();
-renderCustomStyles();
 window.shareGame = shareGame;
 window.closeShareModal = closeShareModal;
 window.copyShareUrl = copyShareUrl;
@@ -1391,11 +1406,30 @@ window.shareToTwitter = shareToTwitter;
 window.shareToWhatsApp = shareToWhatsApp;
 window.nativeShare = nativeShare;
 
-// Check if opening a shared report link first
-if (!checkSharedReport()) {
-  if(getCurrentUser()){show('home');}
+initLeague();
+
+// ═══ INIT — restore Supabase session on page load ═══
+async function initApp() {
+  // Check for shared report link first
+  if (checkSharedReport()) return;
+
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session && session.user) {
+      currentUser = session.user;
+      await loadUserData();
+      renderCustomForms();
+      renderCustomStyles();
+      renderLeagueChips();
+      show('home');
+    }
+    // If no session, landing page is already showing (it has class "on" in HTML)
+  } catch (err) {
+    console.error('Session restore failed:', err);
+  }
 }
+
+initApp();
 </script>
 </body>
 </html>
-

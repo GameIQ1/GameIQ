@@ -6,7 +6,7 @@
 <title>GameIQ</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Cpath%20d%3D%22M%20100%2014%20L%20176%2040%20L%20176%20106%20Q%20176%20150%20100%20186%20Q%2024%20150%2024%20106%20L%2024%2040%20Z%22%20fill%3D%22none%22%20stroke%3D%22%2322c55e%22%20stroke-width%3D%225%22%20stroke-linejoin%3D%22round%22/%3E%3Cg%20transform%3D%22translate%2835.156%2C126.474%29%20scale%280.068%2C-0.068%29%22%3E%3Cpath%20d%3D%22M410%20-12Q327%20-12%20256.5%2015.5Q186%2043%20133.5%2093.0Q81%20143%2052.0%20210.0Q23%20277%2023%20356Q23%20436%2053.5%20503.0Q84%20570%20138.5%20619.5Q193%20669%20265.0%20696.5Q337%20724%20419%20724Q518%20724%20596.5%20690.0Q675%20656%20724%20598L589%20463Q552%20506%20512.0%20527.0Q472%20548%20416%20548Q363%20548%20320.0%20524.5Q277%20501%20251.5%20458.0Q226%20415%20226.0%20357.0Q226%20299%20249.5%20255.5Q273%20212%20315.0%20188.0Q357%20164%20413%20164Q467%20164%20504.0%20185.0Q541%20206%20561%20245Q563%20250%20565%20255L386%20260V420H781V390Q781%20262%20734.5%20172.0Q688%2082%20604.5%2035.0Q521%20-12%20410%20-12Z%22%20fill%3D%22%23e2e8f0%22/%3E%3C/g%3E%3Cg%20transform%3D%22translate%2887.352%2C126.474%29%20scale%280.068%2C-0.068%29%22%3E%3Cpath%20d%3D%22M59%200V712H259V0Z%22%20fill%3D%22%2322c55e%22/%3E%3C/g%3E%3Cg%20transform%3D%22translate%28106.976%2C126.474%29%20scale%280.068%2C-0.068%29%22%3E%3Cpath%20d%3D%22M411%20-14Q327%20-14%20256.5%2014.0Q186%2042%20133.5%2092.0Q81%20142%2052.0%20210.0Q23%20278%2023%20357Q23%20437%2051.5%20504.0Q80%20571%20132.0%20621.0Q184%20671%20254.5%20698.5Q325%20726%20409.0%20726.0Q493%20726%20563.5%20698.5Q634%20671%20686.0%20621.0Q738%20571%20766.5%20503.5Q795%20436%20795%20356Q795%20277%20767%20210Q751%20173%20729%20142L828%2043L720%20-65L616%2039Q592%2024%20564%2014Q494%20-14%20411%20-14ZM409%20162Q449%20162%20481%20174L375%20280L483%20388L582%20289Q591%20320%20591%20357Q591%20401%20578.5%20436.5Q566%20472%20542.0%20497.5Q518%20523%20484.5%20536.5Q451%20550%20409%20550Q353%20550%20312.0%20526.5Q271%20503%20249.0%20459.5Q227%20416%20227%20357Q227%20312%20239.5%20276.0Q252%20240%20276.0%20214.5Q300%20189%20333.5%20175.5Q367%20162%20409%20162Z%22%20fill%3D%22%2322c55e%22/%3E%3C/g%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -608,7 +608,16 @@ input,select,textarea,button{font-family:var(--font)}
 // ═══ SUPABASE ═══
 const SUPABASE_URL = 'https://wlrrparwwaeyxuhcoqmv.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Vw5hUwzutg2x1AXGA-Cgog_44ogOcQb';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let sb = null;
+try {
+  if (window.supabase && window.supabase.createClient) {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  } else {
+    console.error('Supabase library not loaded');
+  }
+} catch(e) {
+  console.error('Supabase init failed:', e);
+}
 
 // ═══ STATE ═══
 const G = { pos:'', date:'', opp:'', league:'', formation:'', styles:[], coach:'', focus:'', events:[] };
@@ -1483,12 +1492,16 @@ async function initApp() {
   // Check for shared report link first
   if (checkSharedReport()) return;
 
+  if (!sb) {
+    console.error('Supabase not available');
+    show('landing');
+    return;
+  }
+
   try {
     // Handle OAuth redirect (Google sign-in comes back with hash params)
     const hash = window.location.hash;
     if (hash && (hash.includes('access_token') || hash.includes('refresh_token'))) {
-      // Supabase will parse the hash automatically via getSession
-      // Clean the URL so it doesn't look ugly
       history.replaceState(null, '', window.location.pathname);
     }
 
@@ -1501,7 +1514,6 @@ async function initApp() {
       renderLeagueChips();
       show('home');
     } else {
-      // No session — show landing page (it starts hidden to prevent flash)
       show('landing');
     }
   } catch (err) {
@@ -1511,16 +1523,18 @@ async function initApp() {
 }
 
 // Listen for auth state changes (catches Google OAuth callback)
-sb.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session && session.user && !currentUser) {
-    currentUser = session.user;
-    await loadUserData();
-    renderCustomForms();
-    renderCustomStyles();
-    renderLeagueChips();
-    show('home');
-  }
-});
+if (sb) {
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session && session.user && !currentUser) {
+      currentUser = session.user;
+      await loadUserData();
+      renderCustomForms();
+      renderCustomStyles();
+      renderLeagueChips();
+      show('home');
+    }
+  });
+}
 
 initApp();
 </script>

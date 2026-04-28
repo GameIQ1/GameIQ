@@ -309,6 +309,30 @@ input,select,textarea,button{font-family:var(--font)}
 </head>
 <body>
 
+<!-- DIAGNOSTIC: This will be visible if JS fails. initApp() hides it. -->
+<div id="jsDiag" style="position:fixed;inset:0;background:#080c14;color:#22c55e;font-family:monospace;display:flex;align-items:center;justify-content:center;z-index:99999;font-size:14px;padding:20px;text-align:center;flex-direction:column;gap:12px">
+  <div style="font-size:24px;font-weight:900">GAMEIQ</div>
+  <div id="diagMsg">Loading...</div>
+  <div id="diagDetail" style="font-size:10px;color:#94a3b8;max-width:400px;word-break:break-all"></div>
+</div>
+<script>
+// Inline diagnostic - runs immediately, before anything else
+try {
+  document.getElementById('diagMsg').textContent = 'Checking Supabase...';
+  if (typeof window.supabase === 'undefined') {
+    document.getElementById('diagMsg').textContent = 'ERROR: Supabase library did not load.';
+    document.getElementById('diagDetail').textContent = 'window.supabase is undefined. The bundled library may have a syntax error or your browser blocked inline scripts.';
+  } else if (typeof window.supabase.createClient !== 'function') {
+    document.getElementById('diagMsg').textContent = 'ERROR: Supabase loaded but createClient is missing.';
+    document.getElementById('diagDetail').textContent = 'window.supabase exists but createClient is not a function. Keys found: ' + Object.keys(window.supabase).join(', ');
+  } else {
+    document.getElementById('diagMsg').textContent = 'Supabase OK. Loading app...';
+  }
+} catch(e) {
+  document.getElementById('diagMsg').textContent = 'Diagnostic error: ' + e.message;
+}
+</script>
+
 <!-- TOP BAR -->
 <div class="tbar" id="tbar" style="display:none">
   <div class="tbar-logo" onclick="show('home')" style="cursor:pointer">GAME<em>IQ</em></div>
@@ -1495,6 +1519,9 @@ initLeague();
 
 // ═══ INIT — restore Supabase session on page load ═══
 async function initApp() {
+  // Hide diagnostic overlay
+  const diag = document.getElementById('jsDiag');
+  if (diag) diag.style.display = 'none';
   // Check for shared report link first
   if (checkSharedReport()) return;
 

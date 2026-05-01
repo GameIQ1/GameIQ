@@ -778,12 +778,10 @@ async function signInWithGoogle() {
     const { error } = await sb.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + window.location.pathname
+        redirectTo: 'https://gameiq-gold.vercel.app'
       }
     });
     if (error) throw error;
-    // Google redirects away from the page — Supabase handles the rest.
-    // When the user comes back, initApp() picks up the session automatically.
   } catch (err) {
     alert('Google sign-in failed: ' + err.message);
   }
@@ -1501,7 +1499,6 @@ initLeague();
 
 // ═══ INIT — restore Supabase session on page load ═══
 async function initApp() {
-  // Check for shared report link first
   if (checkSharedReport()) return;
 
   if (!sb) {
@@ -1511,17 +1508,21 @@ async function initApp() {
   }
 
   try {
-    // Check for OAuth hash tokens (Google sign-in redirect)
+    // Handle OAuth return - check for tokens in hash or code in query params
     const hash = window.location.hash;
-    const hasOAuthTokens = hash && (hash.includes('access_token') || hash.includes('refresh_token'));
+    const params = new URLSearchParams(window.location.search);
+    const hasHash = hash && (hash.includes('access_token') || hash.includes('refresh_token'));
+    const hasCode = params.has('code');
 
-    if (hasOAuthTokens) {
-      // Let Supabase parse the tokens from the URL hash
-      const { data, error } = await sb.auth.getSession();
-      // Now clean the URL
+    if (hasHash || hasCode) {
+      // Exchange the code/tokens for a session
+      const { data, error } = await sb.auth.exchangeCodeForSession(params.get('code') || '');
+      // Even if exchangeCode fails, try getSession - the hash flow might have worked
+      const { data: { session } } = await sb.auth.getSession();
+      // Clean the URL
       history.replaceState(null, '', window.location.pathname);
-      if (data?.session?.user) {
-        currentUser = data.session.user;
+      if (session && session.user) {
+        currentUser = session.user;
         await loadUserData();
         renderCustomForms();
         renderCustomStyles();
@@ -1531,7 +1532,7 @@ async function initApp() {
       }
     }
 
-    // Normal session check (returning user, page refresh)
+    // Normal session restore (page refresh, returning user)
     const { data: { session } } = await sb.auth.getSession();
     if (session && session.user) {
       currentUser = session.user;
@@ -1545,14 +1546,24 @@ async function initApp() {
     }
   } catch (err) {
     console.error('Session restore failed:', err);
+    // Still try getSession as fallback
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session && session.user) {
+        currentUser = session.user;
+        await loadUserData();
+        show('home');
+        return;
+      }
+    } catch(e) {}
     show('landing');
   }
 }
 
-// Listen for auth state changes (catches Google OAuth callback)
+// Listen for auth state changes (catches OAuth callback)
 if (sb) {
   sb.auth.onAuthStateChange(async (event, session) => {
-    if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && session.user && !currentUser) {
+    if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') && session && session.user && !currentUser) {
       currentUser = session.user;
       await loadUserData();
       renderCustomForms();

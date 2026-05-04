@@ -25,6 +25,7 @@ input,select,textarea,button{font-family:var(--font)}
 
 /* SCREENS */
 .scr{position:fixed;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .25s;padding-top:55px;width:100vw}
+#landing{opacity:1;pointer-events:auto;padding-top:0}
 @media(max-width:600px){.scr{padding-top:49px}}
 .scr.on{opacity:1;pointer-events:auto}
 #landing{padding-top:0}
@@ -335,6 +336,7 @@ input,select,textarea,button{font-family:var(--font)}
 <!-- LANDING (new/logged-out users) -->
 <div class="scr" id="landing">
   <div class="land-wrap">
+    <div style="position:fixed;bottom:4px;right:4px;font-size:9px;color:#333;z-index:1">v19</div>
     <div class="land-logo" style="display:flex;flex-direction:column;align-items:center;gap:8px">
       <svg viewBox="0 0 200 200" width="80" height="80">
         <path d="M 100 14 L 176 40 L 176 106 Q 176 150 100 186 Q 24 150 24 106 L 24 40 Z" fill="none" stroke="#22c55e" stroke-width="5" stroke-linejoin="round"/>
@@ -651,7 +653,18 @@ let histFilter = '', navStack = [], drillGameCount = 5;
 
 // ═══ NAVIGATION ═══
 function goPage(id) { navStack.push(getCurrentPage()); show(id); }
-function show(id) { document.querySelectorAll('.scr').forEach(s => s.classList.remove('on')); document.getElementById(id).classList.add('on');
+function show(id) {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  // Landing uses CSS default visibility, so we need to explicitly hide/show it
+  const landing = document.getElementById('landing');
+  if (id === 'landing') {
+    landing.style.opacity = '1';
+    landing.style.pointerEvents = 'auto';
+  } else {
+    landing.style.opacity = '0';
+    landing.style.pointerEvents = 'none';
+  }
+  document.getElementById(id).classList.add('on');
   document.getElementById('tbar').style.display = (id === 'landing') ? 'none' : 'flex';
   if (id === 'home') renderDash();
   if (id === 'history') renderHist();

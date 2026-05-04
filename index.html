@@ -1499,6 +1499,15 @@ initLeague();
 
 // ═══ INIT — restore Supabase session on page load ═══
 async function initApp() {
+  // TEMP DIAGNOSTIC: Show the full URL we landed on
+  const fullUrl = window.location.href;
+  if (fullUrl.includes('code=') || fullUrl.includes('access_token') || fullUrl.includes('error')) {
+    const d = document.createElement('div');
+    d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999999;background:#000;color:#22c55e;font-family:monospace;font-size:11px;padding:12px;word-break:break-all;max-height:40vh;overflow-y:auto';
+    d.innerHTML = '<b>OAuth redirect detected!</b><br><br><b>Full URL:</b> ' + fullUrl.substring(0, 500) + '<br><br><b>Hash:</b> ' + (window.location.hash || '(none)').substring(0, 300) + '<br><br><b>Search:</b> ' + (window.location.search || '(none)').substring(0, 300) + '<br><br><button onclick="this.parentElement.remove()" style="background:#22c55e;color:#000;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-weight:700">Dismiss</button>';
+    document.body.appendChild(d);
+  }
+
   if (checkSharedReport()) return;
 
   if (!sb) {

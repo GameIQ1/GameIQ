@@ -1502,37 +1502,26 @@ async function initApp() {
   if (checkSharedReport()) return;
 
   if (!sb) {
-    console.error('Supabase not available');
     show('landing');
     return;
   }
 
   try {
-    // Handle OAuth return - check for tokens in hash or code in query params
     const hash = window.location.hash;
     const params = new URLSearchParams(window.location.search);
     const hasHash = hash && (hash.includes('access_token') || hash.includes('refresh_token'));
     const hasCode = params.has('code');
 
-    if (hasHash || hasCode) {
-      // Exchange the code/tokens for a session
-      const { data, error } = await sb.auth.exchangeCodeForSession(params.get('code') || '');
-      // Even if exchangeCode fails, try getSession - the hash flow might have worked
-      const { data: { session } } = await sb.auth.getSession();
-      // Clean the URL
-      history.replaceState(null, '', window.location.pathname);
-      if (session && session.user) {
-        currentUser = session.user;
-        await loadUserData();
-        renderCustomForms();
-        renderCustomStyles();
-        renderLeagueChips();
-        show('home');
-        return;
-      }
+    if (hasCode) {
+      try { await sb.auth.exchangeCodeForSession(params.get('code')); } catch(e) {}
     }
 
-    // Normal session restore (page refresh, returning user)
+    // Clean URL if it has OAuth params
+    if (hasHash || hasCode) {
+      history.replaceState(null, '', window.location.pathname);
+    }
+
+    // Get session (works for both hash flow and code flow)
     const { data: { session } } = await sb.auth.getSession();
     if (session && session.user) {
       currentUser = session.user;
@@ -1545,25 +1534,14 @@ async function initApp() {
       show('landing');
     }
   } catch (err) {
-    console.error('Session restore failed:', err);
-    // Still try getSession as fallback
-    try {
-      const { data: { session } } = await sb.auth.getSession();
-      if (session && session.user) {
-        currentUser = session.user;
-        await loadUserData();
-        show('home');
-        return;
-      }
-    } catch(e) {}
+    console.error('Init failed:', err);
     show('landing');
   }
 }
 
-// Listen for auth state changes (catches OAuth callback)
 if (sb) {
   sb.auth.onAuthStateChange(async (event, session) => {
-    if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') && session && session.user && !currentUser) {
+    if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && session.user && !currentUser) {
       currentUser = session.user;
       await loadUserData();
       renderCustomForms();

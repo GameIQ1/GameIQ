@@ -8,20 +8,51 @@
 <h1>GameIQ Test Page</h1>
 <p id="t1">If you can see this, HTML works.</p>
 <p id="t2">Checking JavaScript...</p>
-<p id="t3">Checking external script...</p>
+<p id="t3">Checking Supabase library...</p>
+<p id="t4">Checking createClient...</p>
+<p id="t5">Checking getSession...</p>
 <script>
 document.getElementById('t2').textContent = 'JavaScript works!';
 document.getElementById('t2').style.color = '#4ade80';
 </script>
 <script src="/supabase.min.js"></script>
 <script>
-if (window.supabase && window.supabase.createClient) {
-  document.getElementById('t3').textContent = 'Supabase loaded!';
-  document.getElementById('t3').style.color = '#4ade80';
-} else {
-  document.getElementById('t3').textContent = 'Supabase FAILED to load. window.supabase = ' + typeof window.supabase;
-  document.getElementById('t3').style.color = '#ef4444';
+async function runTests() {
+  // Test 3: Library loaded?
+  if (window.supabase && window.supabase.createClient) {
+    document.getElementById('t3').textContent = 'Supabase library loaded!';
+    document.getElementById('t3').style.color = '#4ade80';
+  } else {
+    document.getElementById('t3').textContent = 'Supabase FAILED. window.supabase = ' + typeof window.supabase;
+    document.getElementById('t3').style.color = '#ef4444';
+    return;
+  }
+
+  // Test 4: Can we create a client?
+  try {
+    var sb = window.supabase.createClient(
+      'https://wlrrparwwaeyxuhcoqmv.supabase.co',
+      'sb_publishable_Vw5hUwzutg2x1AXGA-Cgog_44ogOcQb'
+    );
+    document.getElementById('t4').textContent = 'createClient succeeded! sb = ' + typeof sb;
+    document.getElementById('t4').style.color = '#4ade80';
+  } catch(e) {
+    document.getElementById('t4').textContent = 'createClient FAILED: ' + e.message;
+    document.getElementById('t4').style.color = '#ef4444';
+    return;
+  }
+
+  // Test 5: Can we call getSession?
+  try {
+    var result = await sb.auth.getSession();
+    document.getElementById('t5').textContent = 'getSession succeeded! session = ' + (result?.data?.session ? 'EXISTS' : 'null (not logged in, but call worked)');
+    document.getElementById('t5').style.color = '#4ade80';
+  } catch(e) {
+    document.getElementById('t5').textContent = 'getSession FAILED: ' + e.message;
+    document.getElementById('t5').style.color = '#ef4444';
+  }
 }
+runTests();
 </script>
 </body>
 </html>

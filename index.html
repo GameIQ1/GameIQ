@@ -1501,41 +1501,25 @@ initLeague();
 async function initApp() {
   try { if (checkSharedReport()) return; } catch(e) {}
 
-  // Guarantee something shows even if everything else fails
-  setTimeout(function() {
-    if (!document.querySelector('.scr.on')) {
-      show('landing');
-    }
-  }, 3000);
-
   if (!sb) { show('landing'); return; }
 
   try {
-    // Handle OAuth code exchange
-    try {
-      const params = new URLSearchParams(window.location.search);
-      if (params.has('code')) {
-        await sb.auth.exchangeCodeForSession(params.get('code'));
-      }
-    } catch(e) {}
+    // Handle OAuth code exchange if present
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('code')) {
+      try { await sb.auth.exchangeCodeForSession(params.get('code')); } catch(e) {}
+    }
 
-    // Clean URL
-    try {
-      if (window.location.hash || window.location.search.includes('code=')) {
-        history.replaceState(null, '', window.location.pathname);
-      }
-    } catch(e) {}
+    // Clean URL if it has OAuth params
+    if (window.location.hash.includes('access_token') || window.location.search.includes('code=')) {
+      history.replaceState(null, '', window.location.pathname);
+    }
 
     // Get session
-    let session = null;
-    try {
-      const result = await sb.auth.getSession();
-      session = result?.data?.session;
-    } catch(e) {}
-
+    const { data: { session } } = await sb.auth.getSession();
     if (session && session.user) {
       currentUser = session.user;
-      try { await loadUserData(); } catch(e) {}
+      try { await loadUserData(); } catch(e) { console.error('loadUserData:', e); }
       try { renderCustomForms(); } catch(e) {}
       try { renderCustomStyles(); } catch(e) {}
       try { renderLeagueChips(); } catch(e) {}
@@ -1544,25 +1528,24 @@ async function initApp() {
       show('landing');
     }
   } catch (err) {
+    console.error('Init failed:', err);
     show('landing');
   }
 }
 
 if (sb) {
-  try {
-    sb.auth.onAuthStateChange(async (event, session) => {
-      try {
-        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && session.user && !currentUser) {
-          currentUser = session.user;
-          try { await loadUserData(); } catch(e) {}
-          try { renderCustomForms(); } catch(e) {}
-          try { renderCustomStyles(); } catch(e) {}
-          try { renderLeagueChips(); } catch(e) {}
-          show('home');
-        }
-      } catch(e) {}
-    });
-  } catch(e) {}
+  sb.auth.onAuthStateChange(async (event, session) => {
+    try {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && session.user && !currentUser) {
+        currentUser = session.user;
+        try { await loadUserData(); } catch(e) {}
+        try { renderCustomForms(); } catch(e) {}
+        try { renderCustomStyles(); } catch(e) {}
+        try { renderLeagueChips(); } catch(e) {}
+        show('home');
+      }
+    } catch(e) {}
+  });
 }
 
 initApp();

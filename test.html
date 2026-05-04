@@ -18,34 +18,29 @@ document.getElementById('t2').style.color = '#4ade80';
 <script src="/supabase.min.js"></script>
 <script>
 async function runTests() {
-  // Test 3: Library loaded?
   if (window.supabase && window.supabase.createClient) {
     document.getElementById('t3').textContent = 'Supabase library loaded!';
     document.getElementById('t3').style.color = '#4ade80';
   } else {
-    document.getElementById('t3').textContent = 'Supabase FAILED. window.supabase = ' + typeof window.supabase;
+    document.getElementById('t3').textContent = 'Supabase FAILED.';
     document.getElementById('t3').style.color = '#ef4444';
     return;
   }
-
-  // Test 4: Can we create a client?
   try {
     var sb = window.supabase.createClient(
       'https://wlrrparwwaeyxuhcoqmv.supabase.co',
-      'sb_publishable_Vw5hUwzutg2x1AXGA-Cgog_44ogOcQb'
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndscnJwYXJ3d2FleXh1aGNvcW12Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNjk2ODQsImV4cCI6MjA5MTY0NTY4NH0.wwqFcgGp7zt4AbAJOHQUF36wYWkF8SabXZJ2uvvMYos'
     );
-    document.getElementById('t4').textContent = 'createClient succeeded! sb = ' + typeof sb;
+    document.getElementById('t4').textContent = 'createClient succeeded!';
     document.getElementById('t4').style.color = '#4ade80';
   } catch(e) {
     document.getElementById('t4').textContent = 'createClient FAILED: ' + e.message;
     document.getElementById('t4').style.color = '#ef4444';
     return;
   }
-
-  // Test 5: Can we call getSession?
   try {
     var result = await sb.auth.getSession();
-    document.getElementById('t5').textContent = 'getSession succeeded! session = ' + (result?.data?.session ? 'EXISTS' : 'null (not logged in, but call worked)');
+    document.getElementById('t5').textContent = 'getSession succeeded! session = ' + (result?.data?.session ? 'EXISTS' : 'null (not logged in, but works!)');
     document.getElementById('t5').style.color = '#4ade80';
   } catch(e) {
     document.getElementById('t5').textContent = 'getSession FAILED: ' + e.message;

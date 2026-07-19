@@ -244,6 +244,12 @@ input[type="date"]::-webkit-date-and-time-value{text-align:left;margin:0}
 @media(max-width:600px){.score-hero{padding:16px;gap:14px;margin-bottom:12px}}
 .report-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:800px){.report-grid{grid-template-columns:1fr}}
+/* Progress page */
+.prog-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+@media(max-width:600px){.prog-stats{grid-template-columns:repeat(2,1fr)}}
+.prog-stat{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:16px 12px;text-align:center}
+.prog-stat-n{font-size:30px;font-weight:900;line-height:1}
+.prog-stat-l{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t4);font-weight:700;margin-top:5px}
 .drills-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
 @media(max-width:1100px){.drills-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:750px){.drills-grid{grid-template-columns:repeat(2,1fr)}}
@@ -314,6 +320,7 @@ input[type="date"]::-webkit-date-and-time-value{text-align:left;margin:0}
 <div class="tbar" id="tbar" style="display:none">
   <div class="tbar-logo" onclick="show('home')" style="cursor:pointer">GAME<em>IQ</em></div>
   <div class="tbar-spacer"></div>
+  <button class="tb" onclick="goPage('progress')">Progress</button>
   <button class="tb" onclick="goPage('history')">History</button>
   <button class="tb" onclick="goPage('drills')">My Drills</button>
   <button class="tb tb-accent" onclick="newGame()">+ New Game</button>
@@ -329,6 +336,7 @@ input[type="date"]::-webkit-date-and-time-value{text-align:left;margin:0}
   <div class="ml">Navigate</div>
   <button class="mi" onclick="menuNav('home')"><em>⌂</em>Home</button>
   <button class="mi" onclick="menuNav('new')"><em>＋</em>New Game</button>
+  <button class="mi" onclick="menuNav('progress')"><em>◪</em>Progress</button>
   <button class="mi" onclick="menuNav('history')"><em>◷</em>History</button>
   <button class="mi" onclick="menuNav('drills')"><em>◎</em>My Drills</button>
   <button class="mi" onclick="menuNav('saved-drills')"><em>★</em>Saved Drills</button>
@@ -611,6 +619,8 @@ try {
 <div class="scr" id="game-view"><div class="wrap"><button class="back-btn" onclick="goBack()">← Back</button><div id="gvBody"></div></div></div>
 
 <!-- HISTORY -->
+<div class="scr" id="progress"><div class="wrap"><div class="sec-title">Progress</div><div id="progBody"></div></div></div>
+
 <div class="scr" id="history"><div class="wrap"><div class="sec-title">Game History</div><div id="histBody"></div></div></div>
 
 <!-- DRILLS -->
@@ -683,6 +693,7 @@ function show(id) {
   document.getElementById(id).classList.add('on');
   document.getElementById('tbar').style.display = (id === 'landing') ? 'none' : 'flex';
   if (id === 'home') renderDash();
+  if (id === 'progress') renderProgress();
   if (id === 'history') renderHist();
   if (id === 'drills') renderDrills();
   if (id === 'saved-drills') renderSavedDrills();
@@ -1437,6 +1448,206 @@ function renderDash(){
   document.getElementById('dashRecent').innerHTML=h;
 }
 
+
+// ═══ PROGRESS ═══
+function renderProgress(){
+  const b=document.getElementById('progBody');
+  if(!hist.length){b.innerHTML='<div class="empty">No games analysed yet.<br>Log your first game to start tracking progress.</div>';return;}
+
+  const games=[...hist].reverse(); // oldest → newest
+  const n=games.length;
+  const scores=games.map(g=>g.score);
+  const avg=Math.round(scores.reduce((a,c)=>a+c,0)/n);
+  const best=Math.max(...scores), worst=Math.min(...scores);
+  const bestG=games.filter(g=>g.score===best).pop();
+  const worstG=games.filter(g=>g.score===worst).pop();
+
+  let h='';
+
+  // ── Headline stats ──
+  h+='<div class="prog-stats">'+
+    statCard(n,'Games','var(--t1)')+
+    statCard(avg,'Average',col(avg))+
+    statCard(best,'Best',col(best))+
+    statCard(worst,'Lowest',col(worst))+
+  '</div>';
+
+  // ── Form (recent vs previous) ──
+  if(n>=4){
+    const half=Math.min(3,Math.floor(n/2));
+    const recent=scores.slice(-half), prev=scores.slice(-(half*2),-half);
+    const rAvg=recent.reduce((a,c)=>a+c,0)/recent.length;
+    const pAvg=prev.reduce((a,c)=>a+c,0)/prev.length;
+    const diff=rAvg-pAvg;
+    const dir=diff>1.5?'up':diff<-1.5?'down':'flat';
+    const label={up:'Trending up',down:'Trending down',flat:'Holding steady'}[dir];
+    const colr={up:'var(--accent)',down:'var(--err)',flat:'var(--warn)'}[dir];
+    const arrow={up:'▲',down:'▼',flat:'▬'}[dir];
+    h+='<div class="card" style="display:flex;align-items:center;gap:14px">'+
+      '<div style="font-size:26px;color:'+colr+'">'+arrow+'</div>'+
+      '<div style="flex:1"><div style="font-size:15px;font-weight:700;color:'+colr+'">'+label+'</div>'+
+      '<div style="font-size:12px;color:var(--t3);margin-top:2px">Last '+half+' games average '+rAvg.toFixed(1)+
+      ' vs '+pAvg.toFixed(1)+' before that — '+(diff>=0?'+':'')+diff.toFixed(1)+' points</div></div></div>';
+  }
+
+  // ── Score trend chart ──
+  h+='<div class="card"><div class="sec-title">Score over time</div>'+scoreChart(games)+'</div>';
+
+  // ── Skill ratings with trends ──
+  const allKeys=[...MAIN,...SUBS];
+  const labels={...MAIN_L,...SUB_L};
+  const ratingRows=allKeys.map(k=>{
+    const vals=games.map(g=>g.fullReport&&g.fullReport.ratings?g.fullReport.ratings[k]:null).filter(v=>typeof v==='number');
+    if(!vals.length)return null;
+    const a=Math.round(vals.reduce((x,y)=>x+y,0)/vals.length);
+    let trend='';
+    if(vals.length>=4){
+      const h2=Math.floor(vals.length/2);
+      const older=vals.slice(0,h2), newer=vals.slice(-h2);
+      const d=(newer.reduce((x,y)=>x+y,0)/newer.length)-(older.reduce((x,y)=>x+y,0)/older.length);
+      if(d>2)trend='<span style="color:var(--accent);font-size:11px;font-weight:700" title="Improving">▲ '+d.toFixed(0)+'</span>';
+      else if(d<-2)trend='<span style="color:var(--err);font-size:11px;font-weight:700" title="Declining">▼ '+Math.abs(d).toFixed(0)+'</span>';
+      else trend='<span style="color:var(--t4);font-size:11px">▬</span>';
+    }
+    return{k:k,label:labels[k],avg:a,trend:trend};
+  }).filter(Boolean);
+
+  if(ratingRows.length){
+    const sorted=[...ratingRows].sort((x,y)=>y.avg-x.avg);
+    h+='<div class="card"><div class="sec-title">Skill averages</div>';
+    h+='<p style="font-size:11px;color:var(--t4);margin-bottom:10px;line-height:1.4">Averaged across all '+n+' games. Arrows compare your recent half to your earlier half.</p>';
+    sorted.forEach(r=>{
+      h+='<div class="sub-r"><div class="sub-r-lab">'+r.label+'</div>'+
+        '<div class="sub-r-bar"><div class="sub-r-fill" style="width:'+r.avg+'%;background:'+col(r.avg)+'"></div></div>'+
+        '<div class="sub-r-val">'+r.avg+'</div>'+
+        '<div style="width:34px;text-align:right">'+r.trend+'</div></div>';
+    });
+    const strongest=sorted[0], weakest=sorted[sorted.length-1];
+    h+='<p style="font-size:12px;color:var(--t3);margin-top:10px;line-height:1.5">'+
+      'Strongest: <b style="color:var(--accent)">'+strongest.label+'</b> ('+strongest.avg+') · '+
+      'Needs work: <b style="color:var(--err)">'+weakest.label+'</b> ('+weakest.avg+')</p>';
+    h+='</div>';
+  }
+
+  // ── Recurring patterns ──
+  const patCount={};
+  games.forEach(g=>{
+    if(g.fullReport&&Array.isArray(g.fullReport.patterns)){
+      g.fullReport.patterns.forEach(p=>{
+        if(!p||!p.title)return;
+        const key=p.title.trim();
+        if(!patCount[key])patCount[key]={games:0,total:0,sev:p.severity||'low',last:null};
+        patCount[key].games++;
+        patCount[key].total+=(p.occurrences||1);
+        patCount[key].last=g.date;
+        if(p.severity==='high')patCount[key].sev='high';
+      });
+    }
+  });
+  const patList=Object.entries(patCount).sort((a,c)=>c[1].games-a[1].games).slice(0,8);
+  if(patList.length){
+    h+='<div class="card"><div class="sec-title">Recurring issues</div>';
+    h+='<p style="font-size:11px;color:var(--t4);margin-bottom:10px;line-height:1.4">Patterns the analysis flagged in more than one game. These are what to train.</p>';
+    patList.forEach(([title,d])=>{
+      const pct=Math.round((d.games/n)*100);
+      const sevCol=d.sev==='high'?'var(--err)':d.sev==='medium'?'var(--warn)':'var(--accent)';
+      h+='<div style="margin-bottom:10px">'+
+        '<div style="display:flex;align-items:baseline;gap:6px;margin-bottom:3px">'+
+        '<div style="width:6px;height:6px;border-radius:50%;background:'+sevCol+';flex-shrink:0"></div>'+
+        '<div style="font-size:12px;font-weight:600;color:var(--t1);flex:1">'+title+'</div>'+
+        '<div style="font-size:11px;color:var(--t3);font-weight:600">'+d.games+'/'+n+' games</div></div>'+
+        '<div class="sub-r-bar" style="margin-left:12px"><div class="sub-r-fill" style="width:'+pct+'%;background:'+sevCol+'"></div></div>'+
+        '</div>';
+    });
+    h+='</div>';
+  }
+
+  // ── By position ──
+  const byPos={};
+  games.forEach(g=>{if(g.pos){if(!byPos[g.pos])byPos[g.pos]=[];byPos[g.pos].push(g.score);}});
+  const posKeys=Object.keys(byPos);
+  if(posKeys.length>1){
+    h+='<div class="card"><div class="sec-title">By position</div>';
+    posKeys.map(p=>{
+      const v=byPos[p];
+      return{pos:p,avg:Math.round(v.reduce((a,c)=>a+c,0)/v.length),count:v.length};
+    }).sort((a,c)=>c.avg-a.avg).forEach(r=>{
+      h+='<div class="sub-r"><div class="sub-r-lab">'+r.pos+'</div>'+
+        '<div class="sub-r-bar"><div class="sub-r-fill" style="width:'+r.avg+'%;background:'+col(r.avg)+'"></div></div>'+
+        '<div class="sub-r-val">'+r.avg+'</div>'+
+        '<div style="width:52px;text-align:right;font-size:10px;color:var(--t4)">'+r.count+' game'+(r.count>1?'s':'')+'</div></div>';
+    });
+    h+='</div>';
+  }
+
+  // ── Best / lowest links ──
+  if(n>=2&&bestG&&worstG){
+    h+='<div class="card"><div class="sec-title">Standout games</div>'+
+      progGameRow(bestG,'Best performance')+
+      progGameRow(worstG,'Toughest game')+'</div>';
+  }
+
+  b.innerHTML=h;
+}
+
+function statCard(val,label,colr){
+  return '<div class="prog-stat"><div class="prog-stat-n" style="color:'+colr+'">'+val+'</div>'+
+    '<div class="prog-stat-l">'+label+'</div></div>';
+}
+
+function progGameRow(g,tag){
+  const t=g.opp?'vs '+g.opp:(g.league||'Game');
+  return '<div class="hg" onclick="viewHistGame(\''+g.id+'\')" style="margin-bottom:6px">'+
+    '<div class="hg-score" style="color:'+col(g.score)+'">'+g.score+'</div>'+
+    '<div class="hg-info"><div class="hg-t">'+t+'</div>'+
+    '<div class="hg-m">'+tag+' · '+[g.pos,g.date].filter(Boolean).join(' · ')+'</div></div></div>';
+}
+
+function scoreChart(games){
+  const n=games.length;
+  const scores=games.map(g=>g.score);
+  if(n===1){
+    return '<p style="font-size:12px;color:var(--t3);text-align:center;padding:20px 0">'+
+      'One game so far — score <b style="color:'+col(scores[0])+'">'+scores[0]+'</b>.<br>'+
+      '<span style="color:var(--t4);font-size:11px">Log another game to see your trend.</span></p>';
+  }
+  const W=600,H=190,PL=34,PR=14,PT=16,PB=30;
+  const lo=Math.max(0,Math.min(...scores)-8), hi=Math.min(100,Math.max(...scores)+8);
+  const range=(hi-lo)||1;
+  const X=i=>PL+(i/(n-1))*(W-PL-PR);
+  const Y=s=>PT+(1-((s-lo)/range))*(H-PT-PB);
+
+  let g='';
+  // gridlines
+  [0,0.5,1].forEach(f=>{
+    const v=Math.round(lo+range*f), yy=Y(v);
+    g+='<line x1="'+PL+'" y1="'+yy.toFixed(1)+'" x2="'+(W-PR)+'" y2="'+yy.toFixed(1)+'" stroke="var(--border)" stroke-width="1"/>';
+    g+='<text x="'+(PL-7)+'" y="'+(yy+3.5).toFixed(1)+'" fill="var(--t4)" font-size="10" text-anchor="end" font-family="Outfit,sans-serif">'+v+'</text>';
+  });
+  // area fill
+  let area='M '+X(0).toFixed(1)+' '+Y(scores[0]).toFixed(1);
+  scores.forEach((s,i)=>{if(i)area+=' L '+X(i).toFixed(1)+' '+Y(s).toFixed(1);});
+  area+=' L '+X(n-1).toFixed(1)+' '+(H-PB)+' L '+X(0).toFixed(1)+' '+(H-PB)+' Z';
+  g+='<path d="'+area+'" fill="var(--accent)" opacity="0.08"/>';
+  // line
+  let pts='';
+  scores.forEach((s,i)=>{pts+=X(i).toFixed(1)+','+Y(s).toFixed(1)+' ';});
+  g+='<polyline points="'+pts.trim()+'" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>';
+  // dots
+  scores.forEach((s,i)=>{
+    g+='<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(s).toFixed(1)+'" r="3.5" fill="var(--bg)" stroke="'+col(s)+'" stroke-width="2.5"/>';
+  });
+  // x labels: first, middle, last
+  const idxs=n<=6?scores.map((_,i)=>i):[0,Math.floor((n-1)/2),n-1];
+  idxs.forEach(i=>{
+    const d=(games[i].date||'').toString();
+    const short=d.length>5?d.slice(0,5):d;
+    g+='<text x="'+X(i).toFixed(1)+'" y="'+(H-10)+'" fill="var(--t4)" font-size="10" text-anchor="middle" font-family="Outfit,sans-serif">'+short+'</text>';
+  });
+
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block;overflow:visible" preserveAspectRatio="xMidYMid meet">'+g+'</svg>';
+}
+
 // ═══ LEAGUES ═══
 function initLeague(){
   renderLeagueChips();
@@ -1515,6 +1726,7 @@ window.setHistFilter = setHistFilter;
 window.setHistSort = setHistSort;
 window.clearHistFilters = clearHistFilters;
 
+window.renderProgress = renderProgress;
 window.renderCustomForms = renderCustomForms;
 window.renderCustomStyles = renderCustomStyles;
 window.shareGame = shareGame;

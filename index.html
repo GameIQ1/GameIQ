@@ -42,7 +42,13 @@ input,select,textarea,button{font-family:var(--font)}
 .tbar-logo{font-weight:800;font-size:15px;letter-spacing:2px;color:var(--t2);cursor:pointer}
 .tbar-logo em{font-style:normal;color:var(--accent)}
 .tbar-spacer{flex:1}
-.tb{padding:5px 10px;border-radius:var(--rs);font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:none;color:var(--t3);transition:all .12s}
+.tb{padding:5px 10px;border-radius:var(--rs);font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:none;color:var(--t3);transition:all .12s;white-space:nowrap;flex-shrink:0}
+/* On phones the page links live in the slide-out menu instead of the bar */
+@media(max-width:780px){
+  .tb[data-page]{display:none}
+  .tbar-logo{font-size:16px}
+  .tb.tb-accent{font-size:12px;padding:7px 12px}
+}
 .tb:hover{border-color:var(--t3);color:var(--t1)}
 .tb-accent{background:var(--accent);color:#000;border-color:var(--accent)}
 .tb-accent:hover{background:#4ade80}
@@ -260,6 +266,18 @@ input[type="date"]::-webkit-date-and-time-value{text-align:left;margin:0}
 .chart-dot:hover .halo{opacity:.28}
 .chart-dot .core{transition:stroke-width .15s}
 .chart-dot:hover .core{stroke-width:4}
+/* Hover/tap preview card on the score chart */
+.chart-wrap{position:relative}
+.chart-hint{font-size:10px;color:var(--t4);text-align:center;margin-top:2px;letter-spacing:.3px}
+.chart-preview{position:absolute;display:none;z-index:60;background:var(--s2);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;min-width:180px;max-width:240px;box-shadow:0 10px 30px rgba(0,0,0,.6);cursor:pointer;transition:border-color .15s}
+.chart-preview:hover{border-color:var(--accent)}
+.cp-head{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.cp-score{font-size:26px;font-weight:900;line-height:1;flex-shrink:0}
+.cp-title{font-size:13px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cp-meta{font-size:10px;color:var(--t4);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cp-row{display:flex;gap:9px;flex-wrap:wrap;font-size:10.5px;font-weight:600;margin-bottom:5px}
+.cp-pat{font-size:10.5px;color:var(--t3);line-height:1.35;margin-bottom:5px}
+.cp-cta{font-size:10px;font-weight:700;color:var(--accent);border-top:1px solid var(--border);padding-top:6px;margin-top:2px;letter-spacing:.3px}
 .drills-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
 @media(max-width:1100px){.drills-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:750px){.drills-grid{grid-template-columns:repeat(2,1fr)}}
@@ -1649,15 +1667,15 @@ function scoreChart(games){
   let pts='';
   scores.forEach((s,i)=>{pts+=X(i).toFixed(1)+','+Y(s).toFixed(1)+' ';});
   g+='<polyline points="'+pts.trim()+'" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>';
-  // dots — clickable through to that game's report
+  // dots — hover or tap opens a preview card
   scores.forEach((s,i)=>{
     const gm=games[i];
-    const cx=X(i).toFixed(1), cy=Y(s).toFixed(1);
-    const who=gm.opp?('vs '+gm.opp):(gm.league||'Game');
-    const tip=who+' — '+s+(gm.date?' ('+gm.date+')':'');
-    g+='<g class="chart-dot" onclick="viewHistGame(\''+gm.id+'\')">'+
-       '<title>'+tip.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</title>'+
-       '<circle cx="'+cx+'" cy="'+cy+'" r="13" fill="transparent"/>'+
+    const cxN=X(i), cyN=Y(s);
+    const cx=cxN.toFixed(1), cy=cyN.toFixed(1);
+    const xPct=((cxN/W)*100).toFixed(2), yPct=((cyN/H)*100).toFixed(2);
+    const call="showGamePreview('"+gm.id+"',"+xPct+","+yPct+")";
+    g+='<g class="chart-dot" onmouseenter="'+call+'" onclick="event.stopPropagation();'+call+'">'+
+       '<circle cx="'+cx+'" cy="'+cy+'" r="14" fill="transparent"/>'+
        '<circle class="halo" cx="'+cx+'" cy="'+cy+'" r="10" fill="'+col(s)+'"/>'+
        '<circle class="core" cx="'+cx+'" cy="'+cy+'" r="3.5" fill="var(--bg)" stroke="'+col(s)+'" stroke-width="2.5"/>'+
        '</g>';
@@ -1670,8 +1688,82 @@ function scoreChart(games){
     g+='<text x="'+X(i).toFixed(1)+'" y="'+(H-10)+'" fill="var(--t4)" font-size="10" text-anchor="middle" font-family="Outfit,sans-serif">'+short+'</text>';
   });
 
-  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block;overflow:visible" preserveAspectRatio="xMidYMid meet">'+g+'</svg>';
+  return '<div class="chart-wrap" onmouseleave="hideGamePreview()">'+
+    '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block;overflow:visible" preserveAspectRatio="xMidYMid meet">'+g+'</svg>'+
+    '<div id="chartPreview" class="chart-preview"></div>'+
+    '<div class="chart-hint">Hover or tap a point for a quick look</div>'+
+  '</div>';
 }
+
+
+// ═══ CHART PREVIEW CARD ═══
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function showGamePreview(gid,xPct,yPct){
+  const p=document.getElementById('chartPreview');
+  if(!p)return;
+  const g=hist.find(x=>String(x.id)===String(gid));
+  if(!g)return;
+  const fr=g.fullReport||{};
+  const rt=fr.ratings||{};
+  const good=(fr.goodMoments||[]).length;
+  const bad=(fr.badMoments||[]).length;
+  const pats=fr.patterns||[];
+  const title=g.opp?('vs '+g.opp):(g.league||'Game');
+  const meta=[g.pos,g.formation,g.date].filter(Boolean).join(' · ');
+
+  // strongest / weakest skill this game
+  const L={...MAIN_L,...SUB_L};
+  const keys=[...MAIN,...SUBS].filter(k=>typeof rt[k]==='number');
+  let skillLine='';
+  if(keys.length>=2){
+    const sorted=keys.slice().sort((a,b)=>rt[b]-rt[a]);
+    const bk=sorted[0], wk=sorted[sorted.length-1];
+    skillLine='<div class="cp-row">'+
+      '<span style="color:var(--accent)">▲ '+esc(L[bk])+' '+rt[bk]+'</span>'+
+      '<span style="color:var(--err)">▼ '+esc(L[wk])+' '+rt[wk]+'</span></div>';
+  }
+
+  let patLine='';
+  if(pats.length&&pats[0]&&pats[0].title){
+    const sev=pats[0].severity==='high'?'var(--err)':pats[0].severity==='medium'?'var(--warn)':'var(--accent)';
+    patLine='<div class="cp-pat"><span style="color:'+sev+'">●</span> '+esc(pats[0].title)+'</div>';
+  }
+
+  p.innerHTML=
+    '<div class="cp-head">'+
+      '<div class="cp-score" style="color:'+col(g.score)+'">'+g.score+'</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div class="cp-title">'+esc(title)+'</div>'+
+        (meta?'<div class="cp-meta">'+esc(meta)+'</div>':'')+
+      '</div>'+
+    '</div>'+
+    '<div class="cp-row">'+
+      '<span style="color:var(--accent)">'+good+' good</span>'+
+      '<span style="color:var(--err)">'+bad+' issues</span>'+
+      '<span style="color:var(--t3)">'+pats.length+' pattern'+(pats.length===1?'':'s')+'</span>'+
+    '</div>'+
+    skillLine+patLine+
+    '<div class="cp-cta">Open full report →</div>';
+
+  // keep the card inside the chart on the edges
+  let tx='-50%';
+  if(xPct<24)tx='-12%';
+  else if(xPct>76)tx='-88%';
+  p.style.left=xPct+'%';
+  p.style.top=yPct+'%';
+  p.style.transform='translate('+tx+',calc(-100% - 16px))';
+  p.style.display='block';
+  p.onclick=function(e){e.stopPropagation();hideGamePreview();viewHistGame(gid);};
+}
+
+function hideGamePreview(){
+  const p=document.getElementById('chartPreview');
+  if(p)p.style.display='none';
+}
+
+// tapping anywhere else closes the preview (dots and card stop propagation)
+document.addEventListener('click',function(){hideGamePreview();});
 
 // ═══ LEAGUES ═══
 function initLeague(){
@@ -1752,6 +1844,8 @@ window.setHistSort = setHistSort;
 window.clearHistFilters = clearHistFilters;
 
 window.renderProgress = renderProgress;
+window.showGamePreview = showGamePreview;
+window.hideGamePreview = hideGamePreview;
 window.renderCustomForms = renderCustomForms;
 window.renderCustomStyles = renderCustomStyles;
 window.shareGame = shareGame;

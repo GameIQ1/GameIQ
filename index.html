@@ -143,7 +143,13 @@ input,select,textarea,button{font-family:var(--font)}
 .fta{width:100%;padding:9px 12px;background:var(--s1);border:1.5px solid var(--border2);border-radius:var(--rs);color:var(--t1);font-size:13px;outline:none;resize:vertical;line-height:1.5;transition:border-color .15s}
 .fta:focus{border-color:var(--accent)}.fta::placeholder{color:var(--t4)}
 .fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media(max-width:400px){.fr{grid-template-columns:1fr}}
+@media(max-width:600px){.fr{grid-template-columns:1fr}}
+/* Grid/flex children default to min-width:auto which lets wide inputs blow out the container */
+.fr>*,.fg,.card,.wrap>*,.setup-wrap>*{min-width:0}
+/* iOS Safari gives date/time inputs an intrinsic width that ignores width:100% */
+.fi,.fta{max-width:100%}
+input[type="date"],input[type="number"]{-webkit-appearance:none;appearance:none;min-width:0;max-width:100%}
+input[type="date"]::-webkit-date-and-time-value{text-align:left;margin:0}
 .pick-grid{display:flex;flex-wrap:wrap;gap:6px}
 .pick{padding:7px 14px;border-radius:var(--rs);border:1.5px solid var(--border2);background:var(--s1);color:var(--t2);font-size:13px;font-weight:500;cursor:pointer;transition:all .12s}
 .pick:hover{border-color:var(--t3);color:var(--t1)}.pick.on{border-color:var(--accent);background:var(--accent-glow);color:var(--accent)}
@@ -354,6 +360,17 @@ input,select,textarea,button{font-family:var(--font)}
     </div>
   </div>
 </div>
+
+<script>
+// Runs synchronously the moment the landing element exists — before the browser paints.
+// Stops the landing page flashing on the way back from a Google sign-in redirect.
+try {
+  if (location.hash.indexOf('access_token') !== -1 || location.search.indexOf('code=') !== -1) {
+    var _l = document.getElementById('landing');
+    if (_l) { _l.style.opacity = '0'; _l.style.pointerEvents = 'none'; }
+  }
+} catch(e) {}
+</script>
 
 <!-- LOGOUT MODAL -->
 <div class="note-ov" id="logoutOv">
@@ -921,7 +938,7 @@ TONE: Honest, direct, like a good coach.`;
   let debugInfo = { stage: 'init', httpStatus: null, rawResponse: null, errorType: null, errorMsg: null };
   try {
     debugInfo.stage = 'fetching';
-    const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-5',max_tokens:4000,messages:[{role:'user',content:prompt}]})});
+    const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-5',max_tokens:8000,messages:[{role:'user',content:prompt}]})});
     debugInfo.httpStatus = resp.status + ' ' + resp.statusText;
     debugInfo.stage = 'parsing response';
     const rawText = await resp.text();
@@ -1307,7 +1324,7 @@ async function renderDrills(){
 
   try{
     const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      model:'claude-sonnet-5',max_tokens:3500,
+      model:'claude-sonnet-5',max_tokens:16000,
       messages:[{role:'user',content:`You are an experienced soccer coach designing a training plan. The player plays ${pos}. Here are recurring patterns/weaknesses from their last ${recent.length} games:\n${patSum}\n\n${strictNote}\n\nFor EACH category, generate 2 REAL, established training exercises that actual coaches use. NOT made-up drills.\n\nEach drill MUST include:\n- name: A real drill name coaches would recognize\n- targetMistake: Which pattern this addresses\n- setup: Exact field dimensions (e.g. "20x20 yard grid"), equipment (cones, balls, mannequins), starting positions\n- description: Step-by-step execution a player could follow without a coach present\n- coachingPoints: 2-3 specific technical focuses\n- progression: How to make it harder once mastered\n- duration: Realistic time\n- intensity: High|Moderate|Light\n- groupSize: category name\n\nReturn ONLY valid JSON (no markdown):\n{"insight":"<2 sentences analyzing the player's key weaknesses>","solo":[...],"pair":[...],"small":[...],"group":[...],"team":[...]}`}]
     })});
     const data=await resp.json();
@@ -1338,7 +1355,7 @@ async function refreshCat(cat){
   const pos=hist[0]?.pos||'unknown';
   try{
     const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      model:'claude-sonnet-5',max_tokens:1500,
+      model:'claude-sonnet-5',max_tokens:4000,
       messages:[{role:'user',content:`Soccer player (${pos}). Patterns: ${allPats.join(', ')||'general'}\n\nGenerate 2 fresh, completely different drills for ${catExact[cat]}. Every drill MUST work with ${catExact[cat]} — no more, no fewer. Use creative variation.\nReturn ONLY valid JSON array:\n[{"name":"","targetMistake":"","description":"","duration":"","intensity":"High|Moderate|Light","groupSize":"${cat}"}]`}]
     })});
     const data=await resp.json();
@@ -1360,7 +1377,7 @@ async function genMore(cat){
   const pos=hist[0]?.pos||'unknown';
   try{
     const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      model:'claude-sonnet-5',max_tokens:1200,
+      model:'claude-sonnet-5',max_tokens:4000,
       messages:[{role:'user',content:`Soccer player (${pos}). Patterns: ${allPats.join(', ')||'general'}\n\nGenerate 2 NEW drills for ${catExact[cat]}. Every drill MUST work with ${catExact[cat]} — no more, no fewer.\nReturn ONLY valid JSON array:\n[{"name":"","targetMistake":"","description":"","duration":"","intensity":"High|Moderate|Light","groupSize":"${cat}"}]`}]
     })});
     const data=await resp.json();
@@ -1386,7 +1403,7 @@ async function askDrills(){
   const sizeInstr=size==='any'?'Mix of group sizes.':'All drills for '+size+'. Each drill MUST work with this exact number of players.';
   try{
     const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      model:'claude-sonnet-5',max_tokens:1200,
+      model:'claude-sonnet-5',max_tokens:4000,
       messages:[{role:'user',content:`Soccer player (${G.pos||hist[0]?.pos||'unknown'}) wants to work on:\n"${inp.value.trim()}"\n\n${sizeInstr}\nGenerate 3 drills. Use "High", "Moderate", or "Light" for intensity.\nReturn ONLY valid JSON array:\n[{"name":"","groupSize":"","targetMistake":"","description":"","duration":"","intensity":"High|Moderate|Light"}]`}]
     })});
     const data=await resp.json();

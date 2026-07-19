@@ -921,7 +921,7 @@ TONE: Honest, direct, like a good coach.`;
   let debugInfo = { stage: 'init', httpStatus: null, rawResponse: null, errorType: null, errorMsg: null };
   try {
     debugInfo.stage = 'fetching';
-    const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,messages:[{role:'user',content:prompt}]})});
+    const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-5',max_tokens:4000,messages:[{role:'user',content:prompt}]})});
     debugInfo.httpStatus = resp.status + ' ' + resp.statusText;
     debugInfo.stage = 'parsing response';
     const rawText = await resp.text();
@@ -1307,7 +1307,7 @@ async function renderDrills(){
 
   try{
     const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',max_tokens:3500,
+      model:'claude-sonnet-5',max_tokens:3500,
       messages:[{role:'user',content:`You are an experienced soccer coach designing a training plan. The player plays ${pos}. Here are recurring patterns/weaknesses from their last ${recent.length} games:\n${patSum}\n\n${strictNote}\n\nFor EACH category, generate 2 REAL, established training exercises that actual coaches use. NOT made-up drills.\n\nEach drill MUST include:\n- name: A real drill name coaches would recognize\n- targetMistake: Which pattern this addresses\n- setup: Exact field dimensions (e.g. "20x20 yard grid"), equipment (cones, balls, mannequins), starting positions\n- description: Step-by-step execution a player could follow without a coach present\n- coachingPoints: 2-3 specific technical focuses\n- progression: How to make it harder once mastered\n- duration: Realistic time\n- intensity: High|Moderate|Light\n- groupSize: category name\n\nReturn ONLY valid JSON (no markdown):\n{"insight":"<2 sentences analyzing the player's key weaknesses>","solo":[...],"pair":[...],"small":[...],"group":[...],"team":[...]}`}]
     })});
     const data=await resp.json();
@@ -1338,7 +1338,7 @@ async function refreshCat(cat){
   const pos=hist[0]?.pos||'unknown';
   try{
     const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',max_tokens:1500,
+      model:'claude-sonnet-5',max_tokens:1500,
       messages:[{role:'user',content:`Soccer player (${pos}). Patterns: ${allPats.join(', ')||'general'}\n\nGenerate 2 fresh, completely different drills for ${catExact[cat]}. Every drill MUST work with ${catExact[cat]} — no more, no fewer. Use creative variation.\nReturn ONLY valid JSON array:\n[{"name":"","targetMistake":"","description":"","duration":"","intensity":"High|Moderate|Light","groupSize":"${cat}"}]`}]
     })});
     const data=await resp.json();
@@ -1360,7 +1360,7 @@ async function genMore(cat){
   const pos=hist[0]?.pos||'unknown';
   try{
     const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',max_tokens:1200,
+      model:'claude-sonnet-5',max_tokens:1200,
       messages:[{role:'user',content:`Soccer player (${pos}). Patterns: ${allPats.join(', ')||'general'}\n\nGenerate 2 NEW drills for ${catExact[cat]}. Every drill MUST work with ${catExact[cat]} — no more, no fewer.\nReturn ONLY valid JSON array:\n[{"name":"","targetMistake":"","description":"","duration":"","intensity":"High|Moderate|Light","groupSize":"${cat}"}]`}]
     })});
     const data=await resp.json();
@@ -1386,7 +1386,7 @@ async function askDrills(){
   const sizeInstr=size==='any'?'Mix of group sizes.':'All drills for '+size+'. Each drill MUST work with this exact number of players.';
   try{
     const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',max_tokens:1200,
+      model:'claude-sonnet-5',max_tokens:1200,
       messages:[{role:'user',content:`Soccer player (${G.pos||hist[0]?.pos||'unknown'}) wants to work on:\n"${inp.value.trim()}"\n\n${sizeInstr}\nGenerate 3 drills. Use "High", "Moderate", or "Light" for intensity.\nReturn ONLY valid JSON array:\n[{"name":"","groupSize":"","targetMistake":"","description":"","duration":"","intensity":"High|Moderate|Light"}]`}]
     })});
     const data=await resp.json();
@@ -1516,19 +1516,32 @@ async function initApp() {
   if (!sb) { show('landing'); return; }
 
   try {
+    // Manually parse OAuth tokens from URL hash — most reliable method
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token')) {
+      const hp = new URLSearchParams(hash.substring(1));
+      const access_token = hp.get('access_token');
+      const refresh_token = hp.get('refresh_token');
+      if (access_token && refresh_token) {
+        try { await sb.auth.setSession({ access_token, refresh_token }); }
+        catch(e) { console.error('setSession failed:', e); }
+      }
+    }
+
     // Handle OAuth code exchange if present
     const params = new URLSearchParams(window.location.search);
     if (params.has('code')) {
       try { await sb.auth.exchangeCodeForSession(params.get('code')); } catch(e) {}
     }
 
-    // Clean URL if it has OAuth params
+    // Get session FIRST (before cleaning URL - Supabase reads tokens from hash)
+    const { data: { session } } = await sb.auth.getSession();
+
+    // NOW clean URL if it has OAuth params
     if (window.location.hash.includes('access_token') || window.location.search.includes('code=')) {
       history.replaceState(null, '', window.location.pathname);
     }
 
-    // Get session
-    const { data: { session } } = await sb.auth.getSession();
     if (session && session.user) {
       currentUser = session.user;
       try { await loadUserData(); } catch(e) { console.error('loadUserData:', e); }
